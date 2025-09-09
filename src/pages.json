@@ -64,34 +64,18 @@
 				"navigationBarTextStyle": "white"
 			}
 		},
+        {
+          "path": "pages/training/simple-listening",
+          "style": {
+            "navigationBarTitleText": "听力简答训练",
+            "navigationBarBackgroundColor": "#4facfe",
+            "navigationBarTextStyle": "white"
+          }
+        },
 		{
 			"path": "pages/training/story-retelling",
 			"style": {
 				"navigationBarTitleText": "故事复述训练",
-				"navigationBarBackgroundColor": "#4facfe",
-				"navigationBarTextStyle": "white"
-			}
-		},
-		{
-			"path": "pages/training/simple-listening",
-			"style": {
-				"navigationBarTitleText": "听力简单训练",
-				"navigationBarBackgroundColor": "#4facfe",
-				"navigationBarTextStyle": "white"
-			}
-		},
-		{
-			"path": "pages/training/basic-listening",
-			"style": {
-				"navigationBarTitleText": "基础听力训练",
-				"navigationBarBackgroundColor": "#4facfe",
-				"navigationBarTextStyle": "white"
-			}
-		},
-		{
-			"path": "pages/training/simulation-call",
-			"style": {
-				"navigationBarTitleText": "模拟通话训练",
 				"navigationBarBackgroundColor": "#4facfe",
 				"navigationBarTextStyle": "white"
 			}
@@ -112,14 +96,7 @@
 				"navigationBarTextStyle": "white"
 			}
 		},
-		{
-			"path": "pages/training/vocabulary-meaning",
-			"style": {
-				"navigationBarTitleText": "单词词汇意思训练",
-				"navigationBarBackgroundColor": "#4facfe",
-				"navigationBarTextStyle": "white"
-			}
-		},
+
 		{
 			"path": "pages/exams/index",
 			"style": {

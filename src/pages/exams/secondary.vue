@@ -107,12 +107,6 @@
               <text>面试进度: {{ currentQuestion + 1 }}/{{ interviewQuestions.length }}</text>
             </view>
             
-            <!-- 图片展示区域 -->
-            <view v-if="currentQuestionData.image" class="image-section">
-              <image :src="currentQuestionData.image" class="interview-image" mode="aspectFit"></image>
-              <text class="image-caption">{{ currentQuestionData.imageCaption }}</text>
-            </view>
-            
             <!-- 当前问题 -->
             <view class="current-question">
               <view class="question-header">
@@ -548,7 +542,7 @@ export default {
 <style scoped>
 .exam-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #f8f9fa;
   padding: 20rpx;
 }
 
@@ -557,13 +551,14 @@ export default {
   border-radius: 20rpx;
   padding: 30rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+  border: 1rpx solid #e9ecef;
 }
 
 .title {
   font-size: 36rpx;
   font-weight: bold;
-  color: #2c3e50;
+  color: #495057;
   text-align: center;
   margin-bottom: 20rpx;
 }
@@ -575,7 +570,7 @@ export default {
 }
 
 .time {
-  color: #e74c3c;
+  color: #dc3545;
   font-size: 28rpx;
   font-weight: bold;
 }
@@ -585,12 +580,13 @@ export default {
   border-radius: 20rpx;
   padding: 30rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+  border: 1rpx solid #e9ecef;
 }
 
 .progress-bar {
   height: 12rpx;
-  background: #ecf0f1;
+  background: #e9ecef;
   border-radius: 6rpx;
   overflow: hidden;
   margin-bottom: 20rpx;
@@ -598,14 +594,14 @@ export default {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #667eea, #764ba2);
+  background: #6c757d;
   border-radius: 6rpx;
   transition: width 0.3s ease;
 }
 
 .progress-text {
   text-align: center;
-  color: #7f8c8d;
+  color: #6c757d;
   font-size: 28rpx;
 }
 
@@ -617,7 +613,8 @@ export default {
   background: white;
   border-radius: 20rpx;
   padding: 30rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+  border: 1rpx solid #e9ecef;
 }
 
 .module-header {
@@ -628,12 +625,12 @@ export default {
 .module-title {
   font-size: 32rpx;
   font-weight: bold;
-  color: #2c3e50;
+  color: #495057;
   margin-bottom: 10rpx;
 }
 
 .module-desc {
-  color: #7f8c8d;
+  color: #6c757d;
   font-size: 26rpx;
 }
 
@@ -642,11 +639,11 @@ export default {
   border-radius: 15rpx;
   padding: 25rpx;
   margin-bottom: 30rpx;
-  border-left: 6rpx solid #667eea;
+  border-left: 6rpx solid #6c757d;
 }
 
 .instruction text {
-  color: #5a6c7d;
+  color: #495057;
   font-size: 26rpx;
   line-height: 1.6;
 }
@@ -661,7 +658,7 @@ export default {
 }
 
 .round-counter text {
-  color: #667eea;
+  color: #6c757d;
   font-size: 28rpx;
   font-weight: bold;
 }
@@ -699,7 +696,7 @@ export default {
 }
 
 .communication-log {
-  background: #2c3e50;
+  background: #495057;
   border-radius: 15rpx;
   padding: 20rpx;
   height: 300rpx;
@@ -715,19 +712,19 @@ export default {
 }
 
 .log-item.system {
-  background: #34495e;
+  background: #6c757d;
 }
 
 .log-item.pilot {
-  background: #e74c3c;
+  background: #dc3545;
 }
 
 .log-item.controller {
-  background: #3498db;
+  background: #0d6efd;
 }
 
 .speaker {
-  color: #ecf0f1;
+  color: #f8f9fa;
   font-weight: bold;
   font-size: 24rpx;
 }
@@ -743,7 +740,7 @@ export default {
   position: absolute;
   top: 5rpx;
   right: 10rpx;
-  color: #bdc3c7;
+  color: #adb5bd;
   font-size: 20rpx;
 }
 
@@ -755,7 +752,7 @@ export default {
 }
 
 .listen-btn {
-  background: #f39c12;
+  background: #fd7e14;
   color: white;
   border: none;
   border-radius: 25rpx;
@@ -764,7 +761,7 @@ export default {
 }
 
 .respond-btn {
-  background: #27ae60;
+  background: #198754;
   color: white;
   border: none;
   border-radius: 25rpx;
@@ -773,12 +770,12 @@ export default {
 }
 
 .respond-btn.recording {
-  background: #e74c3c;
+  background: #dc3545;
   animation: pulse 1s infinite;
 }
 
 .emergency-btn {
-  background: #e74c3c;
+  background: #dc3545;
   color: white;
   border: none;
   border-radius: 25rpx;
@@ -787,7 +784,7 @@ export default {
 }
 
 .emergency-btn:disabled {
-  background: #bdc3c7;
+  background: #adb5bd;
 }
 
 .communication-status {
@@ -815,15 +812,15 @@ export default {
 }
 
 .status-value.优秀 {
-  color: #27ae60;
+  color: #198754;
 }
 
 .status-value.良好 {
-  color: #f39c12;
+  color: #fd7e14;
 }
 
 .status-value.一般 {
-  color: #e74c3c;
+  color: #dc3545;
 }
 
 .interview-area {
@@ -836,27 +833,9 @@ export default {
 }
 
 .interview-progress text {
-  color: #667eea;
+  color: #6c757d;
   font-size: 28rpx;
   font-weight: bold;
-}
-
-.image-section {
-  text-align: center;
-  margin-bottom: 30rpx;
-}
-
-.interview-image {
-  width: 100%;
-  max-width: 500rpx;
-  height: 300rpx;
-  border-radius: 15rpx;
-  margin-bottom: 10rpx;
-}
-
-.image-caption {
-  color: #6c757d;
-  font-size: 24rpx;
 }
 
 .current-question {
@@ -876,11 +855,11 @@ export default {
 .question-number {
   font-size: 28rpx;
   font-weight: bold;
-  color: #2c3e50;
+  color: #495057;
 }
 
 .question-category {
-  background: #667eea;
+  background: #6c757d;
   color: white;
   padding: 5rpx 15rpx;
   border-radius: 15rpx;
@@ -892,7 +871,7 @@ export default {
 }
 
 .question-text {
-  color: #2c3e50;
+  color: #495057;
   font-size: 28rpx;
   line-height: 1.6;
 }
@@ -901,10 +880,11 @@ export default {
   background: white;
   border-radius: 10rpx;
   padding: 20rpx;
+  border: 1rpx solid #e9ecef;
 }
 
 .hints-title {
-  color: #667eea;
+  color: #6c757d;
   font-size: 24rpx;
   font-weight: bold;
   margin-bottom: 10rpx;
@@ -921,72 +901,6 @@ export default {
   font-size: 24rpx;
 }
 
-.recording-controls {
-  text-align: center;
-  margin-bottom: 30rpx;
-}
-
-.record-btn {
-  background: #e74c3c;
-  color: white;
-  border: none;
-  border-radius: 25rpx;
-  padding: 20rpx 40rpx;
-  font-size: 28rpx;
-  margin-bottom: 20rpx;
-}
-
-.record-btn.recording {
-  background: #c0392b;
-  animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
-
-.recording-info {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 15rpx;
-}
-
-.recording-time {
-  color: #e74c3c;
-  font-size: 24rpx;
-  font-weight: bold;
-}
-
-.recording-quality {
-  display: flex;
-  align-items: center;
-  gap: 10rpx;
-}
-
-.quality-label {
-  color: #6c757d;
-  font-size: 22rpx;
-}
-
-.quality-bars {
-  display: flex;
-  gap: 4rpx;
-}
-
-.quality-bar {
-  width: 8rpx;
-  height: 20rpx;
-  background: #e9ecef;
-  border-radius: 2rpx;
-}
-
-.quality-bar.active {
-  background: #27ae60;
-}
-
 .question-navigation {
   display: flex;
   align-items: center;
@@ -997,7 +911,7 @@ export default {
 }
 
 .nav-btn {
-  background: #667eea;
+  background: #6c757d;
   color: white;
   border: none;
   border-radius: 20rpx;
@@ -1006,72 +920,12 @@ export default {
 }
 
 .nav-btn:disabled {
-  background: #bdc3c7;
+  background: #adb5bd;
 }
 
-.question-indicators {
-  display: flex;
-  gap: 10rpx;
-}
-
-.indicator {
-  width: 40rpx;
-  height: 40rpx;
-  border-radius: 50%;
-  background: #e9ecef;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22rpx;
-  color: #6c757d;
-  cursor: pointer;
-}
-
-.indicator.current {
-  background: #667eea;
-  color: white;
-}
-
-.indicator.completed {
-  background: #27ae60;
-  color: white;
-}
-
-.footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  padding: 20rpx;
-  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.15);
-  display: flex;
-  gap: 20rpx;
-}
-
-.prev-btn, .next-btn {
-  flex: 1;
-  padding: 25rpx;
-  border-radius: 25rpx;
-  font-size: 28rpx;
-  border: none;
-}
-
-.prev-btn {
-  background: #95a5a6;
-  color: white;
-}
-
-.prev-btn:disabled {
-  background: #bdc3c7;
-}
-
-.next-btn {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
-}
-
-.next-btn:disabled {
-  background: #bdc3c7;
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
 }
 </style>

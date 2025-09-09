@@ -83,7 +83,7 @@
 </template>
 
 <script>
-import { termsData, termCategories } from '@/data/terms.js'
+import { studyApi } from '@/api/index.js'
 import CusHeader from "../../components/cus-header.vue";
 
 export default {
@@ -91,11 +91,15 @@ export default {
   components: {CusHeader},
   data() {
     return {
-      terms: termsData,
-      categories: termCategories,
+      terms: [],
+      categories: [],
       selectedCategory: 'all',
-      selectedTerms: []
+      selectedTerms: [],
+      loading: true
     }
+  },
+  async mounted() {
+    await this.loadTermsData()
   },
   computed: {
     filteredTerms() {
@@ -106,6 +110,30 @@ export default {
     }
   },
   methods: {
+    async loadTermsData() {
+      try {
+        this.loading = true
+        // 获取标准术语数据
+        const termsResponse = await studyApi.getStandardTerms()
+        if (termsResponse.code === 200) {
+          this.terms = termsResponse.data.terms || []
+          this.categories = termsResponse.data.categories || []
+        } else {
+          uni.showToast({
+            title: '获取术语数据失败',
+            icon: 'none'
+          })
+        }
+      } catch (error) {
+        console.error('加载术语数据失败:', error)
+        uni.showToast({
+          title: '网络错误，请重试',
+          icon: 'none'
+        })
+      } finally {
+        this.loading = false
+      }
+    },
     goBack() {
       uni.navigateBack()
     },

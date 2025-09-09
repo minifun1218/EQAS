@@ -5,7 +5,6 @@
   <view class="exam-container">
     <!-- 顶部标题栏 -->
     <view class="header">
-
       <view class="exam-info">
         <text class="time">剩余时间: {{ formatTime(remainingTime) }}</text>
       </view>
@@ -42,12 +41,12 @@
           <view class="question-area">
             <view class="question">{{ listeningQuestion }}</view>
             <view class="options">
-              <view 
-                v-for="(option, index) in listeningOptions" 
-                :key="index"
-                class="option"
-                :class="{ selected: selectedAnswers.listening === index }"
-                @click="selectAnswer('listening', index)"
+              <view
+                  v-for="(option, index) in listeningOptions"
+                  :key="index"
+                  class="option"
+                  :class="{ selected: selectedAnswers.listening === index }"
+                  @click="selectAnswer('listening', index)"
               >
                 <text>{{ String.fromCharCode(65 + index) }}. {{ option }}</text>
               </view>
@@ -73,10 +72,10 @@
             <text class="play-count">已播放: {{ storyPlayCount }}/2</text>
           </view>
           <view class="recording-area">
-            <button 
-              class="record-btn"
-              :class="{ recording: isRecording.story }"
-              @click="toggleRecording('story')"
+            <button
+                class="record-btn"
+                :class="{ recording: isRecording.story }"
+                @click="toggleRecording('story')"
             >
               {{ isRecording.story ? '停止录音' : '开始复述' }}
             </button>
@@ -106,16 +105,16 @@
                 </button>
               </view>
               <view class="questions">
-                <view 
-                  v-for="(question, qIndex) in dialogue.questions" 
-                  :key="qIndex"
-                  class="question-item"
+                <view
+                    v-for="(question, qIndex) in dialogue.questions"
+                    :key="qIndex"
+                    class="question-item"
                 >
                   <text class="question-text">{{ qIndex + 1 }}. {{ question }}</text>
-                  <button 
-                    class="answer-btn"
-                    :class="{ recording: isRecording[`dialogue${dIndex}_q${qIndex}`] }"
-                    @click="toggleRecording(`dialogue${dIndex}_q${qIndex}`)"
+                  <button
+                      class="answer-btn"
+                      :class="{ recording: isRecording[`dialogue${dIndex}_q${qIndex}`] }"
+                      @click="toggleRecording(`dialogue${dIndex}_q${qIndex}`)"
                   >
                     {{ isRecording[`dialogue${dIndex}_q${qIndex}`] ? '停止回答' : '开始回答' }}
                   </button>
@@ -141,29 +140,29 @@
               <text>通话回合: {{ currentRound }}/{{ totalRounds }}</text>
             </view>
             <view class="communication-log">
-              <view 
-                v-for="(log, index) in communicationLogs" 
-                :key="index"
-                class="log-item"
-                :class="log.type"
+              <view
+                  v-for="(log, index) in communicationLogs"
+                  :key="index"
+                  class="log-item"
+                  :class="log.type"
               >
                 <text class="speaker">{{ log.speaker }}:</text>
                 <text class="content">{{ log.content }}</text>
               </view>
             </view>
             <view class="communication-controls">
-              <button 
-                class="listen-btn"
-                @click="playInstruction"
-                :disabled="waitingForBeep"
+              <button
+                  class="listen-btn"
+                  @click="playInstruction"
+                  :disabled="waitingForBeep"
               >
                 {{ waitingForBeep ? '等待提示音' : '听取指令' }}
               </button>
-              <button 
-                class="respond-btn"
-                :class="{ recording: isRecording.communication }"
-                @click="toggleRecording('communication')"
-                :disabled="!canRespond"
+              <button
+                  class="respond-btn"
+                  :class="{ recording: isRecording.communication }"
+                  @click="toggleRecording('communication')"
+                  :disabled="!canRespond"
               >
                 {{ isRecording.communication ? '结束通话' : '开始通话' }}
               </button>
@@ -183,20 +182,17 @@
             <text>与考官进行航空专业相关的英语交谈，可能围绕图片展开讨论。请避免冷场，可适当使用套话争取思考时间。</text>
           </view>
           <view class="interview-area">
-            <view v-if="interviewImage" class="image-section">
-              <image :src="interviewImage" class="interview-image" mode="aspectFit"></image>
-            </view>
             <view class="interview-questions">
-              <view 
-                v-for="(question, index) in interviewQuestions" 
-                :key="index"
-                class="interview-question"
+              <view
+                  v-for="(question, index) in interviewQuestions"
+                  :key="index"
+                  class="interview-question"
               >
                 <text class="question-text">{{ question.text }}</text>
-                <button 
-                  class="answer-btn"
-                  :class="{ recording: isRecording[`interview${index}`] }"
-                  @click="toggleRecording(`interview${index}`)"
+                <button
+                    class="answer-btn"
+                    :class="{ recording: isRecording[`interview${index}`] }"
+                    @click="toggleRecording(`interview${index}`)"
                 >
                   {{ isRecording[`interview${index}`] ? '停止回答' : '开始回答' }}
                 </button>
@@ -212,17 +208,17 @@
 
     <!-- 底部操作按钮 -->
     <view class="footer">
-      <button 
-        class="prev-btn"
-        @click="previousStep"
-        :disabled="currentStep === 1"
+      <button
+          class="prev-btn"
+          @click="previousStep"
+          :disabled="currentStep === 1"
       >
         上一步
       </button>
-      <button 
-        class="next-btn"
-        @click="nextStep"
-        :disabled="!canProceed"
+      <button
+          class="next-btn"
+          @click="nextStep"
+          :disabled="!canProceed"
       >
         {{ currentStep === totalSteps ? '提交考试' : '下一步' }}
       </button>
@@ -241,7 +237,7 @@ export default {
       totalSteps: 5,
       remainingTime: 5400, // 90分钟
       timer: null,
-      
+
       // 音频播放状态
       audioPlaying: {
         listening: false,
@@ -252,11 +248,11 @@ export default {
       audioProgress: {
         listening: 0
       },
-      
+
       // 录音状态
       isRecording: {},
       recordingTime: {},
-      
+
       // 听力理解
       listeningQuestion: '根据听到的管制指令，飞机应该执行什么操作？',
       listeningOptions: [
@@ -268,10 +264,10 @@ export default {
       selectedAnswers: {
         listening: null
       },
-      
+
       // 故事复述
       storyPlayCount: 0,
-      
+
       // 听力简答
       dialogues: [
         {
@@ -289,7 +285,7 @@ export default {
           ]
         }
       ],
-      
+
       // 模拟通话
       currentRound: 1,
       totalRounds: 20,
@@ -302,28 +298,27 @@ export default {
           type: 'system'
         }
       ],
-      
+
       // 口语面试
-      interviewImage: '/static/icons/atc-scenario.png',
       interviewQuestions: [
-        { text: '请描述这张图片中的管制场景' },
+        { text: '请描述管制场景中的关键要素' },
         { text: '在这种情况下，作为管制员你会如何处理？' },
         { text: '请谈谈团队协作在空管工作中的重要性' },
         { text: '如果遇到紧急情况，你的处置原则是什么？' }
       ]
     }
   },
-  
+
   computed: {
     progressPercent() {
       return (this.currentStep / this.totalSteps) * 100
     },
-    
+
     currentStepName() {
       const stepNames = ['听力理解', '故事复述', '听力简答', '模拟通话', '口语面试']
       return stepNames[this.currentStep - 1]
     },
-    
+
     canProceed() {
       // 根据当前步骤检查是否可以继续
       switch(this.currentStep) {
@@ -342,17 +337,17 @@ export default {
       }
     }
   },
-  
+
   mounted() {
     this.startTimer()
   },
-  
+
   beforeUnmount() {
     if (this.timer) {
       clearInterval(this.timer)
     }
   },
-  
+
   methods: {
     startTimer() {
       this.timer = setInterval(() => {
@@ -363,25 +358,25 @@ export default {
         }
       }, 1000)
     },
-    
+
     formatTime(seconds) {
       const hours = Math.floor(seconds / 3600)
       const minutes = Math.floor((seconds % 3600) / 60)
       const secs = seconds % 60
       return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
     },
-    
+
     playAudio(type) {
       this.audioPlaying[type] = !this.audioPlaying[type]
       if (type === 'story' && this.audioPlaying[type]) {
         this.storyPlayCount++
       }
     },
-    
+
     selectAnswer(type, index) {
       this.selectedAnswers[type] = index
     },
-    
+
     toggleRecording(key) {
       if (this.isRecording[key]) {
         this.isRecording[key] = false
@@ -393,7 +388,7 @@ export default {
         this.startRecordingTimer(key)
       }
     },
-    
+
     startRecordingTimer(key) {
       const timer = setInterval(() => {
         if (this.isRecording[key]) {
@@ -403,7 +398,7 @@ export default {
         }
       }, 1000)
     },
-    
+
     playDialogue(index) {
       const key = `dialogue${index}`
       this.audioPlaying[key] = true
@@ -412,7 +407,7 @@ export default {
         this.audioPlaying[key] = false
       }, 3000)
     },
-    
+
     playInstruction() {
       this.waitingForBeep = true
       // 播放指令逻辑
@@ -422,7 +417,7 @@ export default {
         // 播放提示音
       }, 2000)
     },
-    
+
     checkDialogueAnswers() {
       // 检查听力简答是否完成
       for (let i = 0; i < this.dialogues.length; i++) {
@@ -435,7 +430,7 @@ export default {
       }
       return true
     },
-    
+
     checkInterviewAnswers() {
       // 检查口语面试是否完成
       for (let i = 0; i < this.interviewQuestions.length; i++) {
@@ -446,13 +441,13 @@ export default {
       }
       return true
     },
-    
+
     previousStep() {
       if (this.currentStep > 1) {
         this.currentStep--
       }
     },
-    
+
     nextStep() {
       if (this.currentStep < this.totalSteps) {
         this.currentStep++
@@ -460,7 +455,7 @@ export default {
         this.submitExam()
       }
     },
-    
+
     submitExam() {
       uni.showModal({
         title: '提交考试',
@@ -482,24 +477,17 @@ export default {
 <style scoped>
 .exam-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: #f8f9fa;
   padding: 20rpx;
 }
 
 .header {
   background: white;
-  border-radius: 20rpx;
+  border-radius: 16rpx;
   padding: 30rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
-}
-
-.title {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #2c3e50;
-  text-align: center;
-  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
+  border: 1rpx solid #e9ecef;
 }
 
 .exam-info {
@@ -509,37 +497,38 @@ export default {
 }
 
 .time {
-  color: #e74c3c;
+  color: #dc3545;
   font-size: 28rpx;
-  font-weight: bold;
+  font-weight: 600;
 }
 
 .progress-section {
   background: white;
-  border-radius: 20rpx;
+  border-radius: 16rpx;
   padding: 30rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
+  border: 1rpx solid #e9ecef;
 }
 
 .progress-bar {
-  height: 12rpx;
-  background: #ecf0f1;
-  border-radius: 6rpx;
+  height: 8rpx;
+  background: #e9ecef;
+  border-radius: 4rpx;
   overflow: hidden;
   margin-bottom: 20rpx;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #3498db, #2ecc71);
-  border-radius: 6rpx;
+  background: #007bff;
+  border-radius: 4rpx;
   transition: width 0.3s ease;
 }
 
 .progress-text {
   text-align: center;
-  color: #7f8c8d;
+  color: #6c757d;
   font-size: 28rpx;
 }
 
@@ -549,9 +538,10 @@ export default {
 
 .exam-module {
   background: white;
-  border-radius: 20rpx;
+  border-radius: 16rpx;
   padding: 30rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
+  border: 1rpx solid #e9ecef;
 }
 
 .module-header {
@@ -561,26 +551,26 @@ export default {
 
 .module-title {
   font-size: 32rpx;
-  font-weight: bold;
-  color: #2c3e50;
+  font-weight: 600;
+  color: #212529;
   margin-bottom: 10rpx;
 }
 
 .module-desc {
-  color: #7f8c8d;
+  color: #6c757d;
   font-size: 26rpx;
 }
 
 .instruction {
   background: #f8f9fa;
-  border-radius: 15rpx;
+  border-radius: 12rpx;
   padding: 25rpx;
   margin-bottom: 30rpx;
-  border-left: 6rpx solid #3498db;
+  border-left: 4rpx solid #007bff;
 }
 
 .instruction text {
-  color: #5a6c7d;
+  color: #495057;
   font-size: 26rpx;
   line-height: 1.6;
 }
@@ -593,34 +583,34 @@ export default {
 }
 
 .play-btn {
-  background: #3498db;
+  background: #007bff;
   color: white;
   border: none;
-  border-radius: 25rpx;
+  border-radius: 20rpx;
   padding: 15rpx 30rpx;
   font-size: 26rpx;
 }
 
 .play-btn:disabled {
-  background: #bdc3c7;
+  background: #adb5bd;
 }
 
 .audio-progress {
   flex: 1;
-  height: 8rpx;
-  background: #ecf0f1;
-  border-radius: 4rpx;
+  height: 6rpx;
+  background: #e9ecef;
+  border-radius: 3rpx;
   overflow: hidden;
 }
 
 .audio-fill {
   height: 100%;
-  background: #3498db;
-  border-radius: 4rpx;
+  background: #007bff;
+  border-radius: 3rpx;
 }
 
 .play-count {
-  color: #7f8c8d;
+  color: #6c757d;
   font-size: 24rpx;
 }
 
@@ -630,7 +620,7 @@ export default {
 
 .question {
   font-size: 28rpx;
-  color: #2c3e50;
+  color: #212529;
   margin-bottom: 20rpx;
   font-weight: 500;
 }
@@ -643,20 +633,20 @@ export default {
 
 .option {
   background: #f8f9fa;
-  border: 2rpx solid #e9ecef;
-  border-radius: 15rpx;
+  border: 2rpx solid #dee2e6;
+  border-radius: 12rpx;
   padding: 20rpx;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .option.selected {
-  background: #e3f2fd;
-  border-color: #3498db;
+  background: #e7f3ff;
+  border-color: #007bff;
 }
 
 .option text {
-  color: #2c3e50;
+  color: #212529;
   font-size: 26rpx;
 }
 
@@ -666,28 +656,28 @@ export default {
 }
 
 .record-btn {
-  background: #e74c3c;
+  background: #dc3545;
   color: white;
   border: none;
-  border-radius: 25rpx;
+  border-radius: 20rpx;
   padding: 20rpx 40rpx;
   font-size: 28rpx;
   margin-bottom: 20rpx;
 }
 
 .record-btn.recording {
-  background: #c0392b;
+  background: #c82333;
   animation: pulse 1s infinite;
 }
 
 @keyframes pulse {
   0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  50% { transform: scale(1.02); }
   100% { transform: scale(1); }
 }
 
 .recording-time, .answer-time {
-  color: #e74c3c;
+  color: #dc3545;
   font-size: 24rpx;
   margin-top: 10rpx;
 }
@@ -698,9 +688,10 @@ export default {
 
 .dialogue-item {
   background: #f8f9fa;
-  border-radius: 15rpx;
+  border-radius: 12rpx;
   padding: 25rpx;
   margin-bottom: 20rpx;
+  border: 1rpx solid #dee2e6;
 }
 
 .dialogue-header {
@@ -712,8 +703,8 @@ export default {
 
 .dialogue-header text {
   font-size: 28rpx;
-  font-weight: bold;
-  color: #2c3e50;
+  font-weight: 600;
+  color: #212529;
 }
 
 .questions {
@@ -728,26 +719,27 @@ export default {
   align-items: center;
   padding: 15rpx;
   background: white;
-  border-radius: 10rpx;
+  border-radius: 8rpx;
+  border: 1rpx solid #dee2e6;
 }
 
 .question-text {
   flex: 1;
-  color: #2c3e50;
+  color: #212529;
   font-size: 26rpx;
 }
 
 .answer-btn {
-  background: #27ae60;
+  background: #28a745;
   color: white;
   border: none;
-  border-radius: 20rpx;
+  border-radius: 16rpx;
   padding: 10rpx 20rpx;
   font-size: 24rpx;
 }
 
 .answer-btn.recording {
-  background: #e74c3c;
+  background: #dc3545;
 }
 
 .communication-area {
@@ -760,14 +752,14 @@ export default {
 }
 
 .round-counter text {
-  color: #3498db;
+  color: #007bff;
   font-size: 28rpx;
-  font-weight: bold;
+  font-weight: 600;
 }
 
 .communication-log {
-  background: #2c3e50;
-  border-radius: 15rpx;
+  background: #343a40;
+  border-radius: 12rpx;
   padding: 20rpx;
   height: 300rpx;
   overflow-y: auto;
@@ -777,24 +769,24 @@ export default {
 .log-item {
   margin-bottom: 15rpx;
   padding: 10rpx;
-  border-radius: 8rpx;
+  border-radius: 6rpx;
 }
 
 .log-item.system {
-  background: #34495e;
+  background: #495057;
 }
 
 .log-item.pilot {
-  background: #27ae60;
+  background: #28a745;
 }
 
 .log-item.controller {
-  background: #3498db;
+  background: #007bff;
 }
 
 .speaker {
-  color: #ecf0f1;
-  font-weight: bold;
+  color: #f8f9fa;
+  font-weight: 600;
   font-size: 24rpx;
 }
 
@@ -811,41 +803,29 @@ export default {
 }
 
 .listen-btn {
-  background: #f39c12;
-  color: white;
+  background: #ffc107;
+  color: #212529;
   border: none;
-  border-radius: 25rpx;
+  border-radius: 20rpx;
   padding: 15rpx 30rpx;
   font-size: 26rpx;
 }
 
 .respond-btn {
-  background: #27ae60;
+  background: #28a745;
   color: white;
   border: none;
-  border-radius: 25rpx;
+  border-radius: 20rpx;
   padding: 15rpx 30rpx;
   font-size: 26rpx;
 }
 
 .respond-btn.recording {
-  background: #e74c3c;
+  background: #dc3545;
 }
 
 .interview-area {
   margin-top: 30rpx;
-}
-
-.image-section {
-  text-align: center;
-  margin-bottom: 30rpx;
-}
-
-.interview-image {
-  width: 100%;
-  max-width: 500rpx;
-  height: 300rpx;
-  border-radius: 15rpx;
 }
 
 .interview-questions {
@@ -856,8 +836,9 @@ export default {
 
 .interview-question {
   background: #f8f9fa;
-  border-radius: 15rpx;
+  border-radius: 12rpx;
   padding: 25rpx;
+  border: 1rpx solid #dee2e6;
 }
 
 .footer {
@@ -867,7 +848,8 @@ export default {
   right: 0;
   background: white;
   padding: 20rpx;
-  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.1);
+  box-shadow: 0 -2rpx 12rpx rgba(0, 0, 0, 0.08);
+  border-top: 1rpx solid #e9ecef;
   display: flex;
   gap: 20rpx;
 }
@@ -875,26 +857,26 @@ export default {
 .prev-btn, .next-btn {
   flex: 1;
   padding: 25rpx;
-  border-radius: 25rpx;
+  border-radius: 20rpx;
   font-size: 28rpx;
   border: none;
 }
 
 .prev-btn {
-  background: #95a5a6;
+  background: #6c757d;
   color: white;
 }
 
 .prev-btn:disabled {
-  background: #bdc3c7;
+  background: #adb5bd;
 }
 
 .next-btn {
-  background: linear-gradient(135deg, #3498db, #2ecc71);
+  background: #007bff;
   color: white;
 }
 
 .next-btn:disabled {
-  background: #bdc3c7;
+  background: #adb5bd;
 }
 </style>

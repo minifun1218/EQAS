@@ -71,7 +71,7 @@
       <view class="module-card basic-card" @click="goToBasicListening">
         <view class="card-content">
           <view class="card-header">
-            <view class="card-title">听力简单训练</view>
+            <view class="card-title">听力简答训练</view>
             <view class="card-badge basic">基础训练</view>
           </view>
           <view class="card-desc">基础听力技能强化练习</view>
@@ -109,19 +109,7 @@
         </view>
       </view>
 
-      <!-- 单词词汇意思训练 -->
-      <view class="module-card vocab-card" @click="goToVocabularyMeaning">
-        <view class="card-content">
-          <view class="card-header">
-            <view class="card-title">单词词汇意思训练</view>
-            <view class="card-badge vocab">词汇强化</view>
-          </view>
-          <view class="card-desc">强化词汇理解和记忆</view>
-          <view class="card-footer">
-            <text class="time-text">约 18 分钟</text>
-          </view>
-        </view>
-      </view>
+      
     </view>
   </view>
 </template>
@@ -153,7 +141,7 @@ export default {
     // 跳转到听力简单训练
     goToBasicListening() {
       uni.navigateTo({
-        url: '/pages/training/basic-listening'
+        url: '/pages/training/simple-listening'
       })
     },
     // 跳转到模拟通话训练

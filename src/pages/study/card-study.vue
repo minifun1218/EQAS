@@ -6,14 +6,12 @@
       :bordered="true"
       background="#ffffff"
       color="#111">
-
   </cus-navbar>
   <view class="card-study">
-
     <!-- 顶部导航 -->
     <cus-header title="卡片学习">
-
     </cus-header>
+    
     <!-- 学习进度 -->
     <view class="progress-section">
       <view class="progress-info">
@@ -82,15 +80,12 @@
     <!-- 操作按钮 -->
     <view class="action-buttons">
       <button class="action-btn difficult-btn" @click="markDifficult">
-        <image class="btn-icon" src="/static/icons/hard.png" mode="aspectFit"></image>
         <text class="btn-text">困难</text>
       </button>
       <button class="action-btn easy-btn" @click="markEasy">
-        <image class="btn-icon" src="/static/icons/easy.png" mode="aspectFit"></image>
         <text class="btn-text">简单</text>
       </button>
       <button class="action-btn favorite-btn" @click="toggleFavorite">
-        <image class="btn-icon" :src="currentItem.isFavorite ? '/static/icons/like.png' : '/static/icons/like_fill.png'" mode="aspectFit"></image>
         <text class="btn-text">{{ currentItem.isFavorite ? '已收藏' : '收藏' }}</text>
       </button>
     </view>
@@ -98,12 +93,10 @@
     <!-- 导航按钮 -->
     <view class="nav-buttons">
       <button class="nav-btn prev-btn" :disabled="currentIndex === 0" @click="previousCard">
-        <image class="nav-icon" src="/static/icons/last.png" mode="aspectFit"></image>
         <text class="nav-text">上一个</text>
       </button>
       <button class="nav-btn next-btn" @click="nextCard">
         <text class="nav-text">{{ currentIndex === studyItems.length - 1 ? '完成学习' : '下一个' }}</text>
-        <image class="nav-icon" src="/static/icons/next.png" mode="aspectFit"></image>
       </button>
     </view>
 
@@ -111,7 +104,6 @@
     <view v-if="showCompleteModal" class="modal-overlay" @click="closeCompleteModal">
       <view class="complete-modal" @click.stop>
         <view class="modal-content">
-          <image class="success-icon" src="/static/icons/success.png" mode="aspectFit"></image>
           <text class="modal-title">学习完成！</text>
           <text class="modal-desc">恭喜你完成了 {{ studyItems.length }} 个{{ studyType === 'terms' ? '术语' : '词汇' }}的学习</text>
           <view class="modal-stats">
@@ -136,8 +128,7 @@
 
 <script>
 
-import { termCategories } from '@/data/terms.js'
-import { vocabularyTopics } from '@/data/vocabulary.js'
+import { studyApi } from '@/api/index.js'
 import CusNavbar from "../../components/cus-navbar.vue";
 import CusHeader from "../../components/cus-header.vue";
 
@@ -315,9 +306,10 @@ export default {
 </script>
 
 <style scoped>
+/* Updated to light color scheme with soft grays and blues */
 .card-study {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
 }
 
 .header {
@@ -340,16 +332,10 @@ export default {
   justify-content: center;
 }
 
-.back-icon, .settings-icon {
-  width: 40rpx;
-  height: 40rpx;
-  filter: brightness(0) invert(1);
-}
-
 .nav-title {
   font-size: 36rpx;
   font-weight: 600;
-  color: #ffffff;
+  color: #334155;
 }
 
 .progress-section {
@@ -368,19 +354,19 @@ export default {
 .progress-text {
   font-size: 32rpx;
   font-weight: 600;
-  color: #ffffff;
+  color: #334155;
   margin-bottom: 8rpx;
 }
 
 .progress-label {
   font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.8);
+  color: #64748b;
 }
 
 .progress-bar {
   flex: 1;
   height: 8rpx;
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: #e2e8f0;
   border-radius: 4rpx;
   margin-left: 32rpx;
   overflow: hidden;
@@ -388,7 +374,7 @@ export default {
 
 .progress-fill {
   height: 100%;
-  background-color: #ffffff;
+  background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
   border-radius: 4rpx;
   transition: width 0.3s ease;
 }
@@ -403,7 +389,6 @@ export default {
   width: 100%;
   height: 800rpx;
   perspective: 1000rpx;
-
 }
 
 .card-front, .card-back {
@@ -412,13 +397,13 @@ export default {
   height: 100%;
   background-color: #ffffff;
   border-radius: 24rpx;
-  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4rpx 24rpx rgba(148, 163, 184, 0.15);
+  border: 1rpx solid #e2e8f0;
   backface-visibility: hidden;
   transition: transform 0.6s ease;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-
 }
 
 .card-back {
@@ -448,18 +433,19 @@ export default {
 .chinese-text {
   font-size: 48rpx;
   font-weight: 600;
-  color: #333333;
+  color: #1e293b;
   display: block;
   margin-bottom: 16rpx;
 }
 
 .category-badge, .topic-badge {
   font-size: 24rpx;
-  color: #667eea;
-  background-color: #f0f2ff;
+  color: #3b82f6;
+  background-color: #eff6ff;
   padding: 8rpx 16rpx;
   border-radius: 16rpx;
   display: inline-block;
+  border: 1rpx solid #dbeafe;
 }
 
 .difficulty-info {
@@ -472,45 +458,48 @@ export default {
   border-radius: 16rpx;
   color: #ffffff;
   display: inline-block;
+  font-weight: 500;
 }
 
 .difficulty-badge.basic {
-  background-color: #52c41a;
+  background-color: #10b981;
 }
 
 .difficulty-badge.intermediate {
-  background-color: #faad14;
+  background-color: #f59e0b;
 }
 
 .difficulty-badge.advanced {
-  background-color: #f5222d;
+  background-color: #ef4444;
 }
 
 .card-hint {
   text-align: center;
+  padding: 24rpx;
 }
 
 .hint-text {
   font-size: 28rpx;
-  color: #999999;
+  color: #94a3b8;
 }
 
 .answer-section {
   text-align: center;
   margin-bottom: 32rpx;
+  padding: 0 24rpx;
 }
 
 .english-text {
   font-size: 40rpx;
   font-weight: 600;
-  color: #667eea;
+  color: #3b82f6;
   display: block;
   margin-bottom: 16rpx;
 }
 
 .phonetic-text {
   font-size: 28rpx;
-  color: #999999;
+  color: #64748b;
   font-style: italic;
   display: block;
   margin-bottom: 24rpx;
@@ -518,73 +507,75 @@ export default {
 
 .definition-text {
   font-size: 28rpx;
-  color: #666666;
+  color: #475569;
   line-height: 1.6;
   display: block;
 }
 
 .dialogue-section, .examples-section {
   margin-top: 32rpx;
+  padding: 0 24rpx;
 }
 
 .section-title {
   font-size: 28rpx;
   font-weight: 600;
-  color: #333333;
+  color: #1e293b;
   margin-bottom: 16rpx;
-  margin-left: 10rpx;
   display: block;
 }
 
 .dialogue-item {
   margin-bottom: 16rpx;
-  margin-left: 10rpx;
   padding: 16rpx;
-  background-color:#e9ecef;
-  border-radius: 42rpx;
+  background-color: #f1f5f9;
+  border-radius: 12rpx;
+  border: 1rpx solid #e2e8f0;
 }
 
 .speaker {
   font-size: 24rpx;
   font-weight: 600;
-  color: #667eea;
+  color: #3b82f6;
   display: block;
   margin-bottom: 8rpx;
 }
 
 .message {
   font-size: 26rpx;
-  color: #333333;
+  color: #334155;
   display: block;
   margin-bottom: 8rpx;
 }
 
 .translation {
   font-size: 24rpx;
-  color: #666666;
+  color: #64748b;
   display: block;
 }
 
 .example-item {
   margin-bottom: 16rpx;
   padding: 16rpx;
-  background-color: #f8f9fa;
+  background-color: #f8fafc;
   border-radius: 12rpx;
+  border: 1rpx solid #e2e8f0;
 }
 
 .example-english {
   font-size: 26rpx;
-  color: #333333;
+  color: #334155;
   display: block;
   margin-bottom: 8rpx;
 }
 
 .example-chinese {
   font-size: 24rpx;
-  color: #666666;
+  color: #64748b;
   display: block;
 }
 
+/* Updated action buttons to remove icons and use light colors */
 .action-buttons {
   display: flex;
   justify-content: space-around;
@@ -598,30 +589,52 @@ export default {
   align-items: center;
   justify-content: center;
   width: 120rpx;
-  height: 100rpx;
-  background-color: rgba(255, 255, 255, 0.2);
-  border: 2rpx solid rgba(255, 255, 255, 0.3);
+  height: 80rpx;
+  background-color: #ffffff;
+  border: 2rpx solid #e2e8f0;
   border-radius: 16rpx;
   transition: all 0.3s ease;
+  box-shadow: 0 2rpx 8rpx rgba(148, 163, 184, 0.1);
 }
 
 .action-btn:active {
   transform: scale(0.95);
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: #f8fafc;
 }
 
-.btn-icon {
-  width: 40rpx;
-  height: 40rpx;
-  margin-bottom: 8rpx;
-  filter: brightness(0) invert(1);
+.difficult-btn {
+  border-color: #fecaca;
+  background-color: #fef2f2;
+}
+
+.difficult-btn .btn-text {
+  color: #dc2626;
+}
+
+.easy-btn {
+  border-color: #bbf7d0;
+  background-color: #f0fdf4;
+}
+
+.easy-btn .btn-text {
+  color: #16a34a;
+}
+
+.favorite-btn {
+  border-color: #fde68a;
+  background-color: #fffbeb;
+}
+
+.favorite-btn .btn-text {
+  color: #d97706;
 }
 
 .btn-text {
   font-size: 24rpx;
-  color: #ffffff;
+  font-weight: 500;
 }
 
+/* Updated navigation buttons to remove icons and use light colors */
 .nav-buttons {
   display: flex;
   justify-content: space-between;
@@ -636,39 +649,28 @@ export default {
   padding: 0 32rpx;
   background-color: #ffffff;
   border-radius: 40rpx;
-  border: none;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+  border: 2rpx solid #e2e8f0;
+  box-shadow: 0 2rpx 12rpx rgba(148, 163, 184, 0.15);
   transition: all 0.3s ease;
 }
 
 .nav-btn:disabled {
   opacity: 0.5;
+  background-color: #f8fafc;
 }
 
 .nav-btn:active:not(:disabled) {
   transform: scale(0.95);
+  background-color: #f1f5f9;
 }
 
 .prev-btn {
-  background-color: #667eea;
+  border-color: #cbd5e1;
 }
 
 .next-btn {
-  background-color: #667eea;
-}
-
-.nav-icon {
-  width: 32rpx;
-  height: 32rpx;
-}
-
-.prev-btn .nav-icon {
-  margin-right: 12rpx;
-}
-
-.next-btn .nav-icon {
-  margin-left: 12rpx;
-  filter: brightness(0) invert(1);
+  background-color: #3b82f6;
+  border-color: #3b82f6;
 }
 
 .nav-text {
@@ -677,7 +679,7 @@ export default {
 }
 
 .prev-btn .nav-text {
-  color: #ffffff;
+  color: #64748b;
 }
 
 .next-btn .nav-text {
@@ -690,7 +692,7 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -702,31 +704,28 @@ export default {
   background-color: #ffffff;
   border-radius: 24rpx;
   padding: 48rpx;
+  border: 1rpx solid #e2e8f0;
+  box-shadow: 0 8rpx 32rpx rgba(148, 163, 184, 0.2);
 }
 
 .modal-content {
   text-align: center;
 }
 
-.success-icon {
-  width: 120rpx;
-  height: 120rpx;
-  margin-bottom: 32rpx;
-}
-
 .modal-title {
   font-size: 36rpx;
   font-weight: 600;
-  color: #333333;
+  color: #1e293b;
   margin-bottom: 16rpx;
   display: block;
 }
 
 .modal-desc {
   font-size: 28rpx;
-  color: #666666;
+  color: #64748b;
   margin-bottom: 32rpx;
   display: block;
+  line-height: 1.5;
 }
 
 .modal-stats {
@@ -744,14 +743,14 @@ export default {
 .stat-number {
   font-size: 48rpx;
   font-weight: 600;
-  color: #667eea;
+  color: #3b82f6;
   margin-bottom: 8rpx;
   display: block;
 }
 
 .stat-label {
   font-size: 24rpx;
-  color: #999999;
+  color: #94a3b8;
 }
 
 .modal-buttons {
@@ -770,12 +769,13 @@ export default {
 }
 
 .secondary-btn {
-  background-color: #f5f5f5;
-  color: #666666;
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: 2rpx solid #e2e8f0;
 }
 
 .primary-btn {
-  background-color: #667eea;
+  background-color: #3b82f6;
   color: #ffffff;
 }
 </style>

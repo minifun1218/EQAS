@@ -8,6 +8,7 @@
         background="#ffffff"
         color="#111">
     </cus-navbar>
+
     <!-- 导播图轮播 -->
     <view class="banner-section">
       <swiper
@@ -94,38 +95,90 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { studyApi, systemApi } from '@/api/index.js'
+import CusTopHeaders from "../../components/cus-top-headers.vue";
 
 // 学习数据
-const studyDays = ref(15)
-const studyHours = ref('32h')
-const completedExams = ref(8)
-const averageScore = ref('85分')
+const studyDays = ref(0)
+const studyHours = ref('0h')
+const completedExams = ref(0)
+const averageScore = ref('0分')
+const loading = ref(true)
 
 // 导播图数据
-const banners = ref([
-  {
-    title: 'ICAO4英语考试系统',
-    subtitle: '专业的航空英语学习与考试平台',
-    tips: '全面提升航空英语水平，助力职业发展',
-    gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    image: '/static/images/banner1.jpg'
-  },
-  {
-    title: '智能学习系统',
-    subtitle: '个性化学习路径规划',
-    tips: '根据学习进度智能推荐学习内容',
-    gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-    image: '/static/images/banner2.jpg'
-  },
-  {
-    title: '专业考试训练',
-    subtitle: '真实考试环境模拟',
-    tips: '听力、口语、阅读全方位训练',
-    gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-    image: '/static/images/banner3.jpg'
+const banners = ref([])
+
+// 页面加载时获取数据
+onMounted(async () => {
+  await loadStudyStats()
+  await loadBanners()
+})
+
+// 获取学习统计数据
+async function loadStudyStats() {
+  try {
+    const response = await studyApi.getStudyStats()
+    if (response.code === 200) {
+      const stats = response.data
+      studyDays.value = stats.studyDays || 0
+      studyHours.value = stats.studyHours || '0h'
+      completedExams.value = stats.completedExams || 0
+      averageScore.value = stats.averageScore || '0分'
+    }
+  } catch (error) {
+    console.error('获取学习统计失败:', error)
   }
-])
+}
+
+// 获取轮播图数据
+async function loadBanners() {
+  try {
+    const response = await systemApi.getSystemConfig()
+    if (response.code === 200 && response.data.banners) {
+      banners.value = response.data.banners
+    } else {
+      // 如果后端没有配置，使用默认数据
+      banners.value = [
+        {
+          title: 'ICAO4英语考试系统',
+          subtitle: '专业的航空英语学习与考试平台',
+          tips: '全面提升航空英语水平，助力职业发展',
+          gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          image: '/static/images/banner1.jpg'
+        },
+        {
+          title: '智能学习系统',
+          subtitle: '个性化学习路径规划',
+          tips: '根据学习进度智能推荐学习内容',
+          gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+          image: '/static/images/banner2.jpg'
+        },
+        {
+          title: '专业考试训练',
+          subtitle: '真实考试环境模拟',
+          tips: '听力、口语、阅读全方位训练',
+          gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+          image: '/static/images/banner3.jpg'
+        }
+      ]
+    }
+  } catch (error) {
+    console.error('获取轮播图数据失败:', error)
+    // 使用默认数据
+    banners.value = [
+      {
+        title: 'ICAO4英语考试系统',
+        subtitle: '专业的航空英语学习与考试平台',
+        tips: '全面提升航空英语水平，助力职业发展',
+        gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        image: '/static/images/banner1.jpg'
+      }
+    ]
+  } finally {
+    loading.value = false
+  }
+}
 
 // 页面跳转方法
 function goToStudy() {

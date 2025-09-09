@@ -5,7 +5,7 @@
       <view class="nav-left" @click="goBack">
         <text class="nav-back">‹</text>
       </view>
-      <view class="nav-title">听力简单训练</view>
+      <view class="nav-title">听力简单</view>
       <view class="nav-right"></view>
     </view>
 
@@ -144,6 +144,8 @@
 </template>
 
 <script>
+import { trainingApi } from '@/api/index.js'
+
 export default {
   name: 'SimpleListening',
   data() {
@@ -160,66 +162,51 @@ export default {
       userAnswers: {},
       selectedItems: [],
       shuffledItems: [],
-      exercises: [
-        {
-          id: 1,
-          title: '航班信息听写',
-          type: 'fill',
-          instruction: '请听音频，填写缺失的航班信息',
-          audioUrl: '/static/audio/flight-info.mp3',
-          sentenceParts: [
-            { type: 'text', content: 'Flight ' },
-            { type: 'input', id: 0 },
-            { type: 'text', content: ' is scheduled to depart at ' },
-            { type: 'input', id: 1 },
-            { type: 'text', content: ' from gate ' },
-            { type: 'input', id: 2 }
-          ],
-          correctAnswer: 'CA1234, 14:30, A12',
-          explanation: '这是一个标准的航班信息播报，包含航班号、起飞时间和登机口信息。',
-          hint: '注意听清楚数字和字母的发音'
-        },
-        {
-          id: 2,
-          title: '天气信息理解',
-          type: 'choice',
-          instruction: '根据听到的天气播报，选择正确答案',
-          audioUrl: '/static/audio/weather-report.mp3',
-          question: '当前的风向和风速是？',
-          options: [
-            '东北风 15节',
-            '西南风 12节', 
-            '东南风 18节',
-            '西北风 10节'
-          ],
-          correctAnswer: 'B. 西南风 12节',
-          explanation: '播报中明确提到"Southwest wind 12 knots"，即西南风12节。',
-          hint: '仔细听风向的英文表达'
-        },
-        {
-          id: 3,
-          title: '指令序列排序',
-          type: 'order',
-          instruction: '请按听到的指令顺序排列',
-          audioUrl: '/static/audio/atc-instructions.mp3',
-          items: [
-            '联系塔台频率118.1',
-            '保持现有高度',
-            '右转航向090',
-            '减速至250节'
-          ],
-          correctOrder: [2, 3, 1, 0], // 对应items数组的索引
-          correctAnswer: '1.右转航向090 2.减速至250节 3.保持现有高度 4.联系塔台频率118.1',
-          explanation: '管制员按照飞行安全的优先级依次发出指令。',
-          hint: '注意指令的逻辑顺序'
-        }
-      ]
+      loading: true,
+      exercises: []
     }
   },
-  mounted() {
+  async mounted() {
+    await this.loadExercises()
     this.initializeExercise()
   },
   methods: {
+    async loadExercises() {
+      try {
+        const response = await trainingApi.getListeningExercises()
+        if (response.code === 200) {
+          this.exercises = response.data
+        } else {
+          console.error('获取听力练习失败:', response.message)
+          // 使用默认数据
+          this.exercises = [
+            {
+              id: 1,
+              title: '航班信息听写',
+              type: 'fill',
+              instruction: '请听音频，填写缺失的航班信息',
+              audioUrl: '/static/audio/flight-info.mp3',
+              sentenceParts: [
+                { type: 'text', content: 'Flight ' },
+                { type: 'input', id: 0 },
+                { type: 'text', content: ' is scheduled to depart at ' },
+                { type: 'input', id: 1 },
+                { type: 'text', content: ' from gate ' },
+                { type: 'input', id: 2 }
+              ],
+              correctAnswer: 'CA1234, 14:30, A12',
+              explanation: '这是一个标准的航班信息播报，包含航班号、起飞时间和登机口信息。',
+              hint: '注意听清楚数字和字母的发音'
+            }
+          ]
+        }
+      } catch (error) {
+        console.error('获取听力练习失败:', error)
+        this.exercises = []
+      } finally {
+         this.loading = false
+       }
+     },
     initializeExercise() {
       const exercise = this.exercises[this.currentExercise]
       if (exercise.type === 'order') {
@@ -335,16 +322,16 @@ export default {
 <style scoped>
 .listening-container {
   min-height: 100vh;
-  background: #f8f9fa;
+  background-color: #f5f5f5;
 }
 
 .nav-bar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   padding: 20rpx 30rpx;
   background: white;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1rpx solid #eee;
 }
 
 .nav-left {
@@ -353,13 +340,13 @@ export default {
 
 .nav-back {
   font-size: 40rpx;
-  color: #007aff;
+  color: #4facfe;
   font-weight: bold;
 }
 
 .nav-title {
-  font-size: 36rpx;
-  font-weight: 600;
+  font-size: 32rpx;
+  font-weight: bold;
   color: #333;
 }
 
@@ -388,7 +375,7 @@ export default {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
   transition: width 0.3s ease;
 }
 
@@ -667,7 +654,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1rpx solid #eee;
 }
 
 .modal-title {

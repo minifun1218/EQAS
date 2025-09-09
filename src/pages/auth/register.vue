@@ -12,74 +12,69 @@
       <view class="form-container">
         <view class="form-title">创建账号</view>
         <view class="form-subtitle">加入ICAO4航空英语学习平台</view>
-        
+
         <view class="form-group">
           <view class="input-wrapper">
-            <text class="input-icon">👤</text>
-            <input 
-              class="form-input" 
-              type="text" 
-              v-model="registerForm.username" 
-              placeholder="请输入用户名" 
-              placeholder-class="input-placeholder"
+            <input
+                class="form-input"
+                type="text"
+                v-model="registerForm.username"
+                placeholder="请输入用户名"
+                placeholder-class="input-placeholder"
             />
           </view>
         </view>
 
         <view class="form-group">
           <view class="input-wrapper">
-            <text class="input-icon">📱</text>
-            <input 
-              class="form-input" 
-              type="number" 
-              v-model="registerForm.phone" 
-              placeholder="请输入手机号" 
-              placeholder-class="input-placeholder"
+            <input
+                class="form-input"
+                type="number"
+                v-model="registerForm.phone"
+                placeholder="请输入手机号"
+                placeholder-class="input-placeholder"
             />
           </view>
         </view>
 
         <view class="form-group">
           <view class="input-wrapper">
-            <text class="input-icon">✉️</text>
-            <input 
-              class="form-input" 
-              type="text" 
-              v-model="registerForm.email" 
-              placeholder="请输入邮箱地址" 
-              placeholder-class="input-placeholder"
+            <input
+                class="form-input"
+                type="text"
+                v-model="registerForm.email"
+                placeholder="请输入邮箱地址"
+                placeholder-class="input-placeholder"
             />
           </view>
         </view>
 
         <view class="form-group">
           <view class="input-wrapper">
-            <text class="input-icon">🔒</text>
-            <input 
-              class="form-input" 
-              :type="showPassword ? 'text' : 'password'" 
-              v-model="registerForm.password" 
-              placeholder="请输入密码" 
-              placeholder-class="input-placeholder"
+            <input
+                class="form-input"
+                :type="showPassword ? 'text' : 'password'"
+                v-model="registerForm.password"
+                placeholder="请输入密码"
+                placeholder-class="input-placeholder"
             />
             <text class="toggle-password" @click="togglePassword">
-              {{ showPassword ? '👁️' : '👁️‍🗨️' }}
+              {{ showPassword ? '隐藏' : '显示' }}
             </text>
           </view>
         </view>
 
         <view class="form-group">
           <view class="input-wrapper">
-            <text class="input-icon">🔒</text>
-            <input 
-              class="form-input" 
-              :type="showConfirmPassword ? 'text' : 'password'" 
-              v-model="registerForm.confirmPassword" 
-              placeholder="请确认密码" 
-              placeholder-class="input-placeholder"
+            <input
+                class="form-input"
+                :type="showConfirmPassword ? 'text' : 'password'"
+                v-model="registerForm.confirmPassword"
+                placeholder="请确认密码"
+                placeholder-class="input-placeholder"
             />
             <text class="toggle-password" @click="toggleConfirmPassword">
-              {{ showConfirmPassword ? '👁️' : '👁️‍🗨️' }}
+              {{ showConfirmPassword ? '隐藏' : '显示' }}
             </text>
           </view>
         </view>
@@ -87,19 +82,18 @@
         <view class="form-group">
           <view class="verification-wrapper">
             <view class="input-wrapper verification-input">
-              <text class="input-icon">🔢</text>
-              <input 
-                class="form-input" 
-                type="number" 
-                v-model="registerForm.verificationCode" 
-                placeholder="请输入验证码" 
-                placeholder-class="input-placeholder"
+              <input
+                  class="form-input"
+                  type="number"
+                  v-model="registerForm.verificationCode"
+                  placeholder="请输入验证码"
+                  placeholder-class="input-placeholder"
               />
             </view>
-            <button 
-              class="verification-btn" 
-              @click="sendVerificationCode" 
-              :disabled="isCodeSending || countdown > 0"
+            <button
+                class="verification-btn"
+                @click="sendVerificationCode"
+                :disabled="isCodeSending || countdown > 0"
             >
               <text v-if="countdown > 0">{{ countdown }}s</text>
               <text v-else-if="isCodeSending">发送中...</text>
@@ -134,9 +128,8 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { useUserStore } from '@/store/user'
 
-const userStore = useUserStore()
+// const userStore = useUserStore()
 
 // 表单数据
 const registerForm = reactive({
@@ -178,7 +171,7 @@ function sendVerificationCode() {
     })
     return
   }
-  
+
   if (!/^1[3-9]\d{9}$/.test(registerForm.phone)) {
     uni.showToast({
       title: '手机号格式不正确',
@@ -188,19 +181,19 @@ function sendVerificationCode() {
   }
 
   isCodeSending.value = true
-  
+
   // 模拟发送验证码
   setTimeout(() => {
     isCodeSending.value = false
     countdown.value = 60
-    
+
     const timer = setInterval(() => {
       countdown.value--
       if (countdown.value <= 0) {
         clearInterval(timer)
       }
     }, 1000)
-    
+
     uni.showToast({
       title: '验证码已发送',
       icon: 'success'
@@ -215,84 +208,72 @@ async function handleRegister() {
     uni.showToast({ title: '请输入用户名', icon: 'none' })
     return
   }
-  
+
   if (registerForm.username.length < 3 || registerForm.username.length > 20) {
     uni.showToast({ title: '用户名长度应为3-20个字符', icon: 'none' })
     return
   }
-  
+
   if (!registerForm.phone.trim()) {
     uni.showToast({ title: '请输入手机号', icon: 'none' })
     return
   }
-  
+
   if (!/^1[3-9]\d{9}$/.test(registerForm.phone)) {
     uni.showToast({ title: '手机号格式不正确', icon: 'none' })
     return
   }
-  
+
   if (!registerForm.email.trim()) {
     uni.showToast({ title: '请输入邮箱地址', icon: 'none' })
     return
   }
-  
+
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(registerForm.email)) {
     uni.showToast({ title: '邮箱格式不正确', icon: 'none' })
     return
   }
-  
+
   if (!registerForm.password.trim()) {
     uni.showToast({ title: '请输入密码', icon: 'none' })
     return
   }
-  
+
   if (registerForm.password.length < 6) {
     uni.showToast({ title: '密码长度不能少于6位', icon: 'none' })
     return
   }
-  
+
   if (registerForm.password !== registerForm.confirmPassword) {
     uni.showToast({ title: '两次密码输入不一致', icon: 'none' })
     return
   }
-  
+
   if (!registerForm.verificationCode.trim()) {
     uni.showToast({ title: '请输入验证码', icon: 'none' })
     return
   }
-  
+
   if (!registerForm.agreement) {
     uni.showToast({ title: '请同意用户协议和隐私政策', icon: 'none' })
     return
   }
 
   isLoading.value = true
-  
+
   try {
-    const result = await userStore.register({
-      username: registerForm.username,
-      phone: registerForm.phone,
-      email: registerForm.email,
-      password: registerForm.password,
-      verificationCode: registerForm.verificationCode
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 2000))
+
+    uni.showToast({
+      title: '注册成功',
+      icon: 'success'
     })
-    
-    if (result.success) {
-      uni.showToast({
-        title: '注册成功',
-        icon: 'success'
-      })
-      
-      // 跳转到登录页面
-      setTimeout(() => {
-        uni.navigateBack()
-      }, 1500)
-    } else {
-      uni.showToast({
-        title: result.message || '注册失败',
-        icon: 'none'
-      })
-    }
+
+    // 跳转到登录页面
+    setTimeout(() => {
+      uni.navigateBack()
+    }, 1500)
   } catch (error) {
     uni.showToast({
       title: '网络错误，请重试',
@@ -333,7 +314,20 @@ function showPrivacy() {
 <style scoped>
 .register-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #fafbfc 0%, #f1f3f5 50%, #e8eaed 100%);
+  position: relative;
+}
+
+.register-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.03) 0%, transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+  pointer-events: none;
 }
 
 /* 顶部导航 */
@@ -341,19 +335,30 @@ function showPrivacy() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 60rpx 40rpx 20rpx;
-  color: #ffffff;
+  padding: 80rpx 50rpx 30rpx;
+  color: #4a5568;
+  position: relative;
+  z-index: 1;
 }
 
 .back-btn {
-  font-size: 28rpx;
-  padding: 10rpx;
+  font-size: 30rpx;
+  padding: 12rpx 16rpx;
+  border-radius: 12rpx;
+  transition: all 0.3s ease;
+  color: #6b7280;
+}
+
+.back-btn:active {
+  background: rgba(107, 114, 128, 0.1);
+  transform: scale(0.95);
 }
 
 .nav-title {
-  font-size: 32rpx;
-  font-weight: bold;
-  text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.3);
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #1f2937;
+  letter-spacing: 0.5rpx;
 }
 
 .nav-placeholder {
@@ -362,80 +367,108 @@ function showPrivacy() {
 
 /* 表单区域 */
 .form-section {
-  padding: 40rpx 40rpx 60rpx;
+  padding: 20rpx 50rpx 80rpx;
+  position: relative;
+  z-index: 1;
 }
 
 .form-container {
-  background: #ffffff;
-  border-radius: 24rpx;
-  padding: 60rpx 40rpx;
-  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20rpx);
+  border-radius: 32rpx;
+  padding: 80rpx 50rpx;
+  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.06),
+              0 8rpx 25rpx rgba(0, 0, 0, 0.04),
+              inset 0 1rpx 0 rgba(255, 255, 255, 0.8);
+  border: 1rpx solid rgba(255, 255, 255, 0.2);
+  position: relative;
+}
+
+.form-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 32rpx;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  pointer-events: none;
 }
 
 .form-title {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #2c3e50;
+  font-size: 42rpx;
+  font-weight: 700;
+  color: #1a202c;
   text-align: center;
-  margin-bottom: 12rpx;
+  margin-bottom: 16rpx;
+  letter-spacing: 0.5rpx;
 }
 
 .form-subtitle {
-  font-size: 26rpx;
-  color: #7f8c8d;
+  font-size: 28rpx;
+  color: #718096;
   text-align: center;
-  margin-bottom: 60rpx;
+  margin-bottom: 80rpx;
+  line-height: 1.4;
 }
 
 .form-group {
-  margin-bottom: 32rpx;
+  margin-bottom: 36rpx;
+  position: relative;
 }
 
 .input-wrapper {
   position: relative;
   display: flex;
   align-items: center;
-  background: #f8f9fa;
-  border-radius: 16rpx;
-  padding: 0 20rpx;
-  border: 2rpx solid transparent;
-  transition: all 0.3s ease;
+  background: rgba(248, 250, 252, 0.8);
+  border-radius: 20rpx;
+  padding: 0 24rpx;
+  border: 2rpx solid rgba(226, 232, 240, 0.8);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10rpx);
 }
 
 .input-wrapper:focus-within {
-  border-color: #667eea;
-  background: #ffffff;
-  box-shadow: 0 0 0 4rpx rgba(102, 126, 234, 0.1);
-}
-
-.input-icon {
-  font-size: 32rpx;
-  margin-right: 16rpx;
-  color: #7f8c8d;
+  border-color: rgba(99, 102, 241, 0.6);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 6rpx rgba(99, 102, 241, 0.08),
+              0 8rpx 25rpx rgba(99, 102, 241, 0.1);
+  transform: translateY(-2rpx);
 }
 
 .form-input {
   flex: 1;
-  height: 88rpx;
-  font-size: 28rpx;
-  color: #2c3e50;
+  height: 96rpx;
+  font-size: 30rpx;
+  color: #2d3748;
   background: transparent;
   border: none;
+  font-weight: 500;
 }
 
 .input-placeholder {
-  color: #bdc3c7;
+  color: #a0aec0;
 }
 
 .toggle-password {
-  font-size: 32rpx;
-  color: #7f8c8d;
-  padding: 10rpx;
+  font-size: 26rpx;
+  color: #6366f1;
+  padding: 12rpx 16rpx;
+  font-weight: 600;
+  border-radius: 12rpx;
+  transition: all 0.3s ease;
+}
+
+.toggle-password:active {
+  background: rgba(99, 102, 241, 0.1);
+  transform: scale(0.95);
 }
 
 .verification-wrapper {
   display: flex;
-  gap: 16rpx;
+  gap: 20rpx;
 }
 
 .verification-input {
@@ -443,94 +476,132 @@ function showPrivacy() {
 }
 
 .verification-btn {
-  width: 200rpx;
-  height: 88rpx;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  width: 220rpx;
+  height: 96rpx;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: #ffffff;
   border: none;
-  border-radius: 16rpx;
-  font-size: 26rpx;
-  font-weight: bold;
+  border-radius: 20rpx;
+  font-size: 28rpx;
+  font-weight: 700;
+  box-shadow: 0 8rpx 25rpx rgba(99, 102, 241, 0.25),
+              0 4rpx 12rpx rgba(99, 102, 241, 0.15);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.verification-btn:active:not(:disabled) {
+  transform: translateY(2rpx) scale(0.98);
+  box-shadow: 0 4rpx 15rpx rgba(99, 102, 241, 0.3);
 }
 
 .verification-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
+  background: linear-gradient(135deg, #94a3b8 0%, #cbd5e1 100%);
+  box-shadow: 0 4rpx 12rpx rgba(148, 163, 184, 0.2);
+  transform: none;
 }
 
 .agreement-wrapper {
   display: flex;
   align-items: flex-start;
-  margin-bottom: 40rpx;
-  padding: 0 4rpx;
+  margin-bottom: 50rpx;
+  padding: 0 8rpx;
+  cursor: pointer;
 }
 
 .checkbox {
-  width: 32rpx;
-  height: 32rpx;
-  border: 2rpx solid #ddd;
-  border-radius: 6rpx;
+  width: 36rpx;
+  height: 36rpx;
+  border: 2rpx solid rgba(203, 213, 225, 0.8);
+  border-radius: 10rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20rpx;
+  font-size: 22rpx;
   color: transparent;
-  margin-right: 12rpx;
-  margin-top: 4rpx;
+  margin-right: 16rpx;
+  margin-top: 6rpx;
   flex-shrink: 0;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(248, 250, 252, 0.8);
 }
 
 .checkbox.active {
-  background: #667eea;
-  border-color: #667eea;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border-color: #6366f1;
   color: #ffffff;
+  box-shadow: 0 4rpx 12rpx rgba(99, 102, 241, 0.3);
+  transform: scale(1.05);
 }
 
 .agreement-text {
-  font-size: 26rpx;
-  color: #7f8c8d;
-  line-height: 1.5;
+  font-size: 28rpx;
+  color: #64748b;
+  line-height: 1.6;
+  font-weight: 500;
 }
 
 .agreement-link {
-  color: #667eea;
-  font-weight: bold;
+  color: #6366f1;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.agreement-link:hover {
+  color: #4f46e5;
+  text-decoration: underline;
 }
 
 .register-btn {
   width: 100%;
-  height: 88rpx;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  height: 100rpx;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: #ffffff;
   border: none;
-  border-radius: 16rpx;
-  font-size: 32rpx;
-  font-weight: bold;
-  margin-bottom: 32rpx;
-  transition: all 0.3s ease;
+  border-radius: 24rpx;
+  font-size: 34rpx;
+  font-weight: 700;
+  margin-bottom: 40rpx;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 12rpx 30rpx rgba(99, 102, 241, 0.3),
+              0 6rpx 16rpx rgba(99, 102, 241, 0.2);
+  letter-spacing: 0.5rpx;
 }
 
 .register-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
+  background: linear-gradient(135deg, #94a3b8 0%, #cbd5e1 100%);
+  box-shadow: 0 6rpx 20rpx rgba(148, 163, 184, 0.2);
+  transform: none;
 }
 
 .register-btn:active:not(:disabled) {
-  transform: scale(0.98);
+  transform: translateY(2rpx) scale(0.98);
+  box-shadow: 0 8rpx 20rpx rgba(99, 102, 241, 0.4);
 }
 
 .login-link {
   text-align: center;
+  padding: 20rpx 0;
 }
 
 .login-text {
-  font-size: 26rpx;
-  color: #7f8c8d;
-  margin-right: 8rpx;
+  font-size: 28rpx;
+  color: #64748b;
+  margin-right: 12rpx;
+  font-weight: 500;
 }
 
 .login-btn-text {
-  font-size: 26rpx;
-  color: #667eea;
-  font-weight: bold;
+  font-size: 28rpx;
+  color: #6366f1;
+  font-weight: 700;
+  transition: all 0.3s ease;
+}
+
+.login-btn-text:active {
+  color: #4f46e5;
+  transform: scale(0.95);
 }
 </style>

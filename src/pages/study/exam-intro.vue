@@ -7,7 +7,7 @@
       background="#ffffff"
       color="#111">
   </cus-navbar>
-
+  
   <view class="exam-intro-container">
     <!-- 顶部导航 -->
     <cus-header title="考试介绍" @go-back="goBack">
@@ -16,17 +16,17 @@
     <!-- 视频播放区域 -->
     <view class="video-section">
       <view class="video-container">
-        <video
-            class="intro-video"
-            :src="videoUrl"
-            :poster="videoPoster"
-            controls
-            :show-fullscreen-btn="true"
-            :show-play-btn="true"
-            :show-center-play-btn="true"
-            @play="onVideoPlay"
-            @pause="onVideoPause"
-            @ended="onVideoEnd"
+        <video 
+          class="intro-video"
+          :src="videoUrl"
+          :poster="videoPoster"
+          controls
+          :show-fullscreen-btn="true"
+          :show-play-btn="true"
+          :show-center-play-btn="true"
+          @play="onVideoPlay"
+          @pause="onVideoPause"
+          @ended="onVideoEnd"
         >
         </video>
         <view class="video-overlay" v-if="!isVideoPlaying">
@@ -38,7 +38,7 @@
       <view class="video-info">
         <text class="video-title">ICAO4级英语考试介绍</text>
         <view class="video-meta">
-          <text class="video-duration">⏱️ 时长：10分钟</text>
+          <text class="video-duration">时长：10分钟</text>
           <view class="video-badge">官方介绍</view>
         </view>
       </view>
@@ -47,14 +47,13 @@
     <!-- 图文介绍内容 -->
     <view class="content-section">
       <view class="section-header">
-        <text class="section-title">📋 考试概述</text>
+        <text class="section-title">考试概述</text>
         <text class="section-subtitle">全面了解ICAO英语等级考试</text>
       </view>
-
+      
       <!-- 考试基本信息 -->
       <view class="info-card">
         <view class="card-header">
-          <view class="card-icon">ℹ️</view>
           <text class="card-title">基本信息</text>
         </view>
         <view class="info-list">
@@ -84,14 +83,10 @@
       <!-- 考试内容 -->
       <view class="info-card">
         <view class="card-header">
-          <view class="card-icon">📚</view>
           <text class="card-title">考试内容</text>
         </view>
         <view class="content-list">
           <view class="content-item" v-for="(item, index) in examContent" :key="index">
-            <view class="content-icon-wrapper">
-              <text class="content-icon">{{ item.icon }}</text>
-            </view>
             <view class="content-info">
               <text class="content-name">{{ item.name }}</text>
               <text class="content-desc">{{ item.description }}</text>
@@ -103,7 +98,6 @@
       <!-- 评分标准 -->
       <view class="info-card">
         <view class="card-header">
-          <view class="card-icon">⭐</view>
           <text class="card-title">评分标准</text>
         </view>
         <view class="scoring-list">
@@ -120,7 +114,6 @@
       <!-- 备考建议 -->
       <view class="info-card">
         <view class="card-header">
-          <view class="card-icon">💡</view>
           <text class="card-title">备考建议</text>
         </view>
         <view class="tips-list">
@@ -148,22 +141,18 @@ export default {
       isVideoPlaying: false,
       examContent: [
         {
-          icon: '🎧',
           name: '听力理解',
           description: '测试对航空英语对话和指令的理解能力'
         },
         {
-          icon: '🗣️',
           name: '口语表达',
           description: '评估航空情境下的英语口语交流能力'
         },
         {
-          icon: '📖',
           name: '阅读理解',
           description: '考查对航空技术文档的阅读理解能力'
         },
         {
-          icon: '✍️',
           name: '书面表达',
           description: '测试航空相关的英语写作和表达能力'
         }
@@ -222,19 +211,18 @@ export default {
 </script>
 
 <style scoped>
-/* Updated to light color scheme with better visual hierarchy */
 .exam-intro-container {
   min-height: 100vh;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  background: #f5f7fa;
 }
 
-/* 视频区域 */
 .video-section {
   background: white;
   margin: 20rpx 30rpx;
-  border-radius: 24rpx;
+  border-radius: 16rpx;
   overflow: hidden;
-  box-shadow: 0 4rpx 20rpx rgba(148, 163, 184, 0.1);
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+  border: 1rpx solid #e8eaed;
 }
 
 .video-container {
@@ -246,8 +234,8 @@ export default {
 .intro-video {
   width: 100%;
   height: 100%;
-  background: #f1f5f9;
-  border-radius: 24rpx 24rpx 0 0;
+  background: #f8f9fa;
+  border-radius: 16rpx 16rpx 0 0;
 }
 
 .video-overlay {
@@ -259,19 +247,18 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(15, 23, 42, 0.4);
-  backdrop-filter: blur(2rpx);
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .play-button {
   width: 120rpx;
   height: 120rpx;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.95);
+  background: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.15);
   transition: all 0.3s ease;
 }
 
@@ -281,7 +268,7 @@ export default {
 
 .play-icon {
   font-size: 40rpx;
-  color: #3b82f6;
+  color: #4285f4;
   margin-left: 8rpx;
 }
 
@@ -292,12 +279,11 @@ export default {
 .video-title {
   font-size: 32rpx;
   font-weight: 600;
-  color: #1e293b;
+  color: #202124;
   display: block;
   margin-bottom: 16rpx;
 }
 
-/* Added video meta section with badge */
 .video-meta {
   display: flex;
   align-items: center;
@@ -306,24 +292,22 @@ export default {
 
 .video-duration {
   font-size: 26rpx;
-  color: #64748b;
+  color: #5f6368;
 }
 
 .video-badge {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  color: #1d4ed8;
+  background: #e8f0fe;
+  color: #1a73e8;
   font-size: 22rpx;
   padding: 8rpx 16rpx;
-  border-radius: 20rpx;
+  border-radius: 12rpx;
   font-weight: 500;
 }
 
-/* 内容区域 */
 .content-section {
   padding: 0 30rpx 60rpx;
 }
 
-/* Enhanced section header with subtitle */
 .section-header {
   margin-bottom: 40rpx;
   padding-top: 20rpx;
@@ -332,48 +316,40 @@ export default {
 .section-title {
   font-size: 36rpx;
   font-weight: 700;
-  color: #1e293b;
+  color: #202124;
   display: block;
   margin-bottom: 8rpx;
 }
 
 .section-subtitle {
   font-size: 28rpx;
-  color: #64748b;
+  color: #5f6368;
   font-weight: 400;
 }
 
-/* Redesigned info cards with light theme */
 .info-card {
   background: white;
-  border-radius: 24rpx;
+  border-radius: 16rpx;
   margin-bottom: 30rpx;
   overflow: hidden;
-  box-shadow: 0 4rpx 20rpx rgba(148, 163, 184, 0.08);
-  border: 1px solid #f1f5f9;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+  border: 1rpx solid #e8eaed;
 }
 
 .card-header {
   padding: 30rpx;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-bottom: 1px solid #e2e8f0;
+  background: #f8f9fa;
+  border-bottom: 1rpx solid #e8eaed;
   display: flex;
   align-items: center;
-}
-
-/* Added card icons */
-.card-icon {
-  font-size: 32rpx;
-  margin-right: 16rpx;
 }
 
 .card-title {
   font-size: 32rpx;
   font-weight: 600;
-  color: #334155;
+  color: #202124;
 }
 
-/* Enhanced info list with dots */
 .info-list {
   padding: 30rpx;
 }
@@ -393,14 +369,14 @@ export default {
   width: 8rpx;
   height: 8rpx;
   border-radius: 50%;
-  background: #3b82f6;
+  background: #4285f4;
   margin-right: 20rpx;
   flex-shrink: 0;
 }
 
 .info-label {
   font-size: 28rpx;
-  color: #64748b;
+  color: #5f6368;
   width: 160rpx;
   flex-shrink: 0;
   font-weight: 500;
@@ -408,12 +384,11 @@ export default {
 
 .info-value {
   font-size: 28rpx;
-  color: #1e293b;
+  color: #202124;
   flex: 1;
   font-weight: 500;
 }
 
-/* Enhanced content list styling */
 .content-list {
   padding: 30rpx;
 }
@@ -422,31 +397,14 @@ export default {
   display: flex;
   align-items: flex-start;
   margin-bottom: 32rpx;
-  padding: 20rpx;
-  background: #f8fafc;
-  border-radius: 16rpx;
-  border-left: 4rpx solid #3b82f6;
+  padding: 24rpx;
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  border-left: 4rpx solid #4285f4;
 }
 
 .content-item:last-child {
   margin-bottom: 0;
-}
-
-.content-icon-wrapper {
-  width: 60rpx;
-  height: 60rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: white;
-  border-radius: 12rpx;
-  margin-right: 20rpx;
-  flex-shrink: 0;
-  box-shadow: 0 2rpx 8rpx rgba(148, 163, 184, 0.1);
-}
-
-.content-icon {
-  font-size: 32rpx;
 }
 
 .content-info {
@@ -456,18 +414,17 @@ export default {
 .content-name {
   font-size: 30rpx;
   font-weight: 600;
-  color: #1e293b;
+  color: #202124;
   display: block;
   margin-bottom: 8rpx;
 }
 
 .content-desc {
   font-size: 26rpx;
-  color: #64748b;
+  color: #5f6368;
   line-height: 1.6;
 }
 
-/* Enhanced scoring section */
 .scoring-list {
   padding: 30rpx;
 }
@@ -475,9 +432,9 @@ export default {
 .scoring-item {
   margin-bottom: 32rpx;
   padding: 24rpx;
-  background: #f8fafc;
-  border-radius: 16rpx;
-  border: 1px solid #e2e8f0;
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  border: 1rpx solid #e8eaed;
 }
 
 .scoring-item:last-child {
@@ -494,25 +451,24 @@ export default {
 .scoring-name {
   font-size: 30rpx;
   font-weight: 600;
-  color: #1e293b;
+  color: #202124;
 }
 
 .scoring-weight {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  color: #1d4ed8;
+  background: #e8f0fe;
+  color: #1a73e8;
   font-size: 24rpx;
   padding: 6rpx 12rpx;
-  border-radius: 12rpx;
+  border-radius: 8rpx;
   font-weight: 600;
 }
 
 .scoring-desc {
   font-size: 26rpx;
-  color: #64748b;
+  color: #5f6368;
   line-height: 1.6;
 }
 
-/* Enhanced tips section with better numbering */
 .tips-list {
   padding: 30rpx;
 }
@@ -522,9 +478,9 @@ export default {
   align-items: flex-start;
   margin-bottom: 24rpx;
   padding: 20rpx;
-  background: #f8fafc;
-  border-radius: 16rpx;
-  border: 1px solid #e2e8f0;
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  border: 1rpx solid #e8eaed;
 }
 
 .tip-item:last-child {
@@ -535,7 +491,7 @@ export default {
   width: 44rpx;
   height: 44rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: #4285f4;
   color: white;
   font-size: 24rpx;
   display: flex;
@@ -544,12 +500,11 @@ export default {
   margin-right: 20rpx;
   flex-shrink: 0;
   font-weight: 600;
-  box-shadow: 0 4rpx 12rpx rgba(59, 130, 246, 0.3);
 }
 
 .tip-text {
   font-size: 28rpx;
-  color: #334155;
+  color: #202124;
   line-height: 1.6;
   flex: 1;
   font-weight: 400;

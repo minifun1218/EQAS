@@ -230,6 +230,7 @@
 </template>
 
 <script>
+
 export default {
   data() {
     return {
@@ -510,7 +511,7 @@ export default {
 <style scoped>
 .result-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   padding: 20rpx;
   padding-bottom: 120rpx;
 }
@@ -550,7 +551,8 @@ export default {
   width: 160rpx;
   height: 160rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  border: 3rpx solid #2196f3;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -561,13 +563,13 @@ export default {
 .score-number {
   font-size: 48rpx;
   font-weight: bold;
-  color: white;
+  color: #1976d2;
 }
 
 .score-label {
   font-size: 24rpx;
-  color: white;
-  opacity: 0.9;
+  color: #1976d2;
+  opacity: 0.8;
 }
 
 .score-info {
@@ -779,12 +781,12 @@ export default {
 }
 
 .ability-bar.active {
-  background: #667eea;
+  background: #64b5f6;
 }
 
 .ability-score {
   font-size: 24rpx;
-  color: #667eea;
+  color: #1976d2;
   font-weight: bold;
 }
 
@@ -857,7 +859,7 @@ export default {
 }
 
 .resource-arrow {
-  color: #667eea;
+  color: #1976d2;
   font-size: 28rpx;
   font-weight: bold;
 }
@@ -895,7 +897,7 @@ export default {
 
 .bar-fill {
   width: 30rpx;
-  background: #667eea;
+  background: #64b5f6;
   border-radius: 4rpx 4rpx 0 0;
   margin-bottom: 10rpx;
   transition: height 0.3s ease;

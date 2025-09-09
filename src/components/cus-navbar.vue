@@ -159,38 +159,60 @@
 .login-actions {
   display: flex;
   align-items: center;
-  gap: 32rpx;
+  gap: 24rpx;
 }
 
 .login-btn, .register-btn {
-  padding: 16rpx 32rpx;
-  border-radius: 40rpx;
-  font-size: 28rpx;
-  font-weight: 500;
+  padding: 20rpx 40rpx;
+  border-radius: 24rpx;
+  font-size: 30rpx;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   border: 2rpx solid transparent;
+  letter-spacing: 0.5rpx;
+  position: relative;
+  overflow: hidden;
 }
 
 .login-btn {
-  color: #2b6cfb;
-  background: transparent;
-  border-color: #2b6cfb;
+  color: #6366f1;
+  background: rgba(248, 250, 252, 0.8);
+  border-color: rgba(99, 102, 241, 0.3);
+  backdrop-filter: blur(10rpx);
+  box-shadow: 0 4rpx 12rpx rgba(99, 102, 241, 0.1);
 }
 
 .login-btn:hover {
-  background: #2b6cfb;
-  color: white;
+  background: rgba(99, 102, 241, 0.05);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #4f46e5;
+  box-shadow: 0 6rpx 20rpx rgba(99, 102, 241, 0.15);
+  transform: translateY(-1rpx);
+}
+
+.login-btn:active {
+  transform: translateY(1rpx) scale(0.98);
+  box-shadow: 0 2rpx 8rpx rgba(99, 102, 241, 0.2);
 }
 
 .register-btn {
-  color: white;
-  background: linear-gradient(135deg, #2b6cfb, #42a5f5);
+  color: #ffffff;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  box-shadow: 0 8rpx 25rpx rgba(99, 102, 241, 0.25),
+              0 4rpx 12rpx rgba(99, 102, 241, 0.15);
 }
 
 .register-btn:hover {
-  background: linear-gradient(135deg, #1565c0, #2b6cfb);
+  background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%);
   transform: translateY(-2rpx);
+  box-shadow: 0 12rpx 30rpx rgba(99, 102, 241, 0.3),
+              0 6rpx 16rpx rgba(99, 102, 241, 0.2);
+}
+
+.register-btn:active {
+  transform: translateY(1rpx) scale(0.98);
+  box-shadow: 0 6rpx 20rpx rgba(99, 102, 241, 0.35);
 }
 
 /* 用户头像区域 */

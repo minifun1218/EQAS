@@ -212,6 +212,8 @@
 </template>
 
 <script>
+import { trainingApi } from '@/api/index.js'
+
 export default {
   name: 'OralInterview',
   data() {
@@ -226,55 +228,15 @@ export default {
       showCompleteModal: false,
       recordingTimer: null,
       currentResult: {},
-      banners: [
-        {
-          icon: '🎯',
-          title: '专业口语面试训练',
-          subtitle: '提升航空英语口语表达能力',
-          tips: '真实场景模拟，专业评分反馈',
-          gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-        },
-        {
-          icon: '📈',
-          title: '智能评分系统',
-          subtitle: '多维度评估口语水平',
-          tips: '流利度、准确性、完整性全面分析',
-          gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
-        },
-        {
-          icon: '🏆',
-          title: '个性化训练方案',
-          subtitle: '针对性提升薄弱环节',
-          tips: '根据评估结果制定专属学习计划',
-          gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
-        }
-      ],
-      scenarios: [
-        {
-          id: 1,
-          name: '个人介绍',
-          description: '自我介绍和个人背景',
-          duration: '15分钟',
-          icon: '👤'
-        },
-        {
-          id: 2,
-          name: '工作经验',
-          description: '航空工作经验分享',
-          duration: '20分钟',
-          icon: '✈️'
-        },
-        {
-          id: 3,
-          name: '情景应对',
-          description: '紧急情况处理能力',
-          duration: '25分钟',
-          icon: '🚨'
-        }
-      ],
+      loading: true,
+      banners: [],
+      scenarios: [],
       selectedScenario: null,
       questions: []
     }
+  },
+  async mounted() {
+    await this.loadTrainingData()
   },
   computed: {
     currentQuestionData() {
@@ -316,80 +278,107 @@ export default {
       this.loadQuestions(scenario.id)
       this.trainingStarted = true
     },
-    loadQuestions(scenarioId) {
-      const questionSets = {
-        1: [ // 个人介绍
+    async loadTrainingData() {
+      try {
+        // 获取轮播图数据
+        const bannerResponse = await trainingApi.getTrainingBanners()
+        if (bannerResponse.code === 200) {
+          this.banners = bannerResponse.data
+        } else {
+          // 使用默认数据
+          this.banners = [
+            {
+              icon: '🎯',
+              title: '专业口语面试训练',
+              subtitle: '提升航空英语口语表达能力',
+              tips: '真实场景模拟，专业评分反馈',
+              gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+            },
+            {
+              icon: '📈',
+              title: '智能评分系统',
+              subtitle: '多维度评估口语水平',
+              tips: '流利度、准确性、完整性全面分析',
+              gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+            },
+            {
+              icon: '🏆',
+              title: '个性化训练方案',
+              subtitle: '针对性提升薄弱环节',
+              tips: '根据评估结果制定专属学习计划',
+              gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+            }
+          ]
+        }
+
+        // 获取场景数据
+        const scenarioResponse = await trainingApi.getOralScenarios()
+        if (scenarioResponse.code === 200) {
+          this.scenarios = scenarioResponse.data
+        } else {
+          // 使用默认数据
+          this.scenarios = [
+            {
+              id: 1,
+              name: '个人介绍',
+              description: '自我介绍和个人背景',
+              duration: '15分钟',
+              icon: '👤'
+            },
+            {
+              id: 2,
+              name: '工作经验',
+              description: '航空工作经验分享',
+              duration: '20分钟',
+              icon: '✈️'
+            },
+            {
+              id: 3,
+              name: '情景应对',
+              description: '紧急情况处理能力',
+              duration: '25分钟',
+              icon: '🚨'
+            }
+          ]
+        }
+      } catch (error) {
+        console.error('获取训练数据失败:', error)
+        // 使用默认数据
+        this.banners = [
           {
-            id: 1,
-            type: '自我介绍',
-            question: '请用英语简单介绍一下您自己，包括您的姓名、教育背景和为什么选择航空行业。',
-            timeLimit: 120,
-            context: null
-          },
-          {
-            id: 2,
-            type: '职业规划',
-            question: '请谈谈您对未来在航空行业发展的规划和目标。',
-            timeLimit: 90,
-            context: null
-          },
-          {
-            id: 3,
-            type: '个人优势',
-            question: '请描述您认为自己最适合从事航空工作的三个优势。',
-            timeLimit: 90,
-            context: null
-          }
-        ],
-        2: [ // 工作经验
-          {
-            id: 1,
-            type: '工作描述',
-            question: '请详细描述您之前的工作经验，特别是与航空相关的经历。',
-            timeLimit: 150,
-            context: null
-          },
-          {
-            id: 2,
-            type: '团队合作',
-            question: '请举例说明您在团队合作中遇到的挑战以及如何解决的。',
-            timeLimit: 120,
-            context: '航空工作需要高度的团队协作精神'
-          },
-          {
-            id: 3,
-            type: '压力处理',
-            question: '描述一次您在高压力环境下工作的经历，以及您是如何应对的。',
-            timeLimit: 120,
-            context: '航空行业经常面临高压力的工作环境'
-          }
-        ],
-        3: [ // 情景应对
-          {
-            id: 1,
-            type: '紧急情况',
-            question: '如果在飞行过程中遇到恶劣天气，作为管制员您会如何处理？',
-            timeLimit: 180,
-            context: '一架客机正在进近，突然遭遇强烈的侧风和降雨'
-          },
-          {
-            id: 2,
-            type: '沟通协调',
-            question: '当飞行员和您的指令发生分歧时，您会如何处理这种情况？',
-            timeLimit: 150,
-            context: '飞行员认为您的高度指令不合适，要求更改'
-          },
-          {
-            id: 3,
-            type: '决策能力',
-            question: '在多架飞机同时请求紧急降落时，您会如何安排优先级？',
-            timeLimit: 180,
-            context: '机场只有一条跑道可用，有三架飞机都报告了不同程度的紧急情况'
+            icon: '🎯',
+            title: '专业口语面试训练',
+            subtitle: '提升航空英语口语表达能力',
+            tips: '真实场景模拟，专业评分反馈',
+            gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
           }
         ]
+        this.scenarios = [
+          {
+            id: 1,
+            name: '个人介绍',
+            description: '自我介绍和个人背景',
+            duration: '15分钟',
+            icon: '👤'
+          }
+        ]
+      } finally {
+        this.loading = false
       }
-      
-      this.questions = questionSets[scenarioId] || []
+    },
+    async loadQuestions(scenarioId) {
+      try {
+        const response = await trainingApi.getOralQuestions(scenarioId)
+        if (response.code === 200) {
+          this.questions = response.data
+        } else {
+          console.error('获取题目失败:', response.message)
+          this.questions = []
+        }
+      } catch (error) {
+        console.error('获取题目失败:', error)
+        this.questions = []
+      }
     },
     toggleRecording() {
       if (this.isRecording) {
