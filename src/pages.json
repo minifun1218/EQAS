@@ -1,0 +1,232 @@
+{
+    "easycom": {
+        "autiscan": true,
+        "custom": {
+          "cus-(.*)": "@/components/cus-$1.vue"
+        }
+    },
+	"pages": [
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "首页"
+			}
+		},
+		{
+			"path": "pages/study/index",
+			"style": {
+				"navigationBarTitleText": "学习"
+			}
+		},
+		{
+			"path": "pages/study/exam-intro",
+			"style": {
+				"navigationBarTitleText": "考试介绍",
+				"navigationBarBackgroundColor": "#667eea",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/study/standard-terms",
+			"style": {
+				"navigationBarTitleText": "标准通话用语",
+				"navigationBarBackgroundColor": "#667eea",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/study/vocabulary",
+			"style": {
+				"navigationBarTitleText": "高频词汇表",
+				"navigationBarBackgroundColor": "#667eea",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/study/card-study",
+			"style": {
+				"navigationBarTitleText": "卡片学习",
+				"navigationBarBackgroundColor": "#667eea",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/training/index",
+			"style": {
+				"navigationBarTitleText": "训练中心"
+			}
+		},
+		{
+			"path": "pages/training/listening-comprehension",
+			"style": {
+				"navigationBarTitleText": "听力理解训练",
+				"navigationBarBackgroundColor": "#4facfe",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/training/story-retelling",
+			"style": {
+				"navigationBarTitleText": "故事复述训练",
+				"navigationBarBackgroundColor": "#4facfe",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/training/simple-listening",
+			"style": {
+				"navigationBarTitleText": "听力简单训练",
+				"navigationBarBackgroundColor": "#4facfe",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/training/basic-listening",
+			"style": {
+				"navigationBarTitleText": "基础听力训练",
+				"navigationBarBackgroundColor": "#4facfe",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/training/simulation-call",
+			"style": {
+				"navigationBarTitleText": "模拟通话训练",
+				"navigationBarBackgroundColor": "#4facfe",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/training/simulated-call",
+			"style": {
+				"navigationBarTitleText": "模拟通话训练",
+				"navigationBarBackgroundColor": "#4facfe",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/training/oral-interview",
+			"style": {
+				"navigationBarTitleText": "口语面试训练",
+				"navigationBarBackgroundColor": "#4facfe",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/training/vocabulary-meaning",
+			"style": {
+				"navigationBarTitleText": "单词词汇意思训练",
+				"navigationBarBackgroundColor": "#4facfe",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/exams/index",
+			"style": {
+				"navigationBarTitleText": "模拟考试",
+				"navigationBarBackgroundColor": "#667eea",
+				"navigationBarTextStyle": "white"
+			}
+		},
+        {
+          "path": "pages/exams/preexam",
+          "style": {
+            "navigationBarTitleText": "准备考试",
+            "navigationBarBackgroundColor": "#667eea",
+            "navigationBarTextStyle": "white"
+          }
+        },
+        {
+          "path": "pages/exams/primary",
+          "style": {
+            "navigationBarTitleText": "初级英语考试",
+            "navigationBarBackgroundColor": "#667eea",
+            "navigationBarTextStyle": "white"
+          }
+        },
+        {
+          "path": "pages/exams/secondary",
+          "style": {
+            "navigationBarTitleText": "中级英语复试",
+            "navigationBarBackgroundColor": "#667eea",
+            "navigationBarTextStyle": "white"
+          }
+        },
+        {
+          "path": "pages/exams/result",
+          "style": {
+            "navigationBarTitleText": "考试结果",
+            "navigationBarBackgroundColor": "#667eea",
+            "navigationBarTextStyle": "white"
+          }
+        },
+		{
+			"path": "pages/user/index",
+			"style": {
+				"navigationBarTitleText": "个人中心"
+			}
+		},
+		{
+			"path": "pages/user/profile",
+			"style": {
+				"navigationBarTitleText": "个人资料"
+			}
+		},
+		{
+			"path": "pages/user/settings",
+			"style": {
+				"navigationBarTitleText": "设置"
+			}
+		},
+		{
+			"path": "pages/user/progress",
+			"style": {
+				"navigationBarTitleText": "学习进度"
+			}
+		},
+		{
+			"path": "pages/user/mistakes",
+			"style": {
+				"navigationBarTitleText": "错题本"
+			}
+		},
+		{
+			"path": "pages/user/history",
+			"style": {
+				"navigationBarTitleText": "练习历史"
+			}
+		},
+		{
+			"path": "pages/auth/login",
+			"style": {
+				"navigationBarTitleText": "登录",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/auth/register",
+			"style": {
+				"navigationBarTitleText": "注册",
+				"navigationStyle": "custom"
+			}
+		}
+
+		
+	],
+	"globalStyle": {
+        "navigationStyle": "custom",
+  		"backgroundColor": "#F8F8F8"
+	},
+    "tabBar": {
+      "color": "#999999",
+      "selectedColor": "#007AFF",
+      "backgroundColor": "#ffffff",
+      "list": [
+        { "pagePath": "pages/index/index",   "text": "首页", "iconPath": "static/icons/HomeIcon.png",   "selectedIconPath": "static/icons/HomeIcon-blue.png" },
+        { "pagePath": "pages/study/index",   "text": "学习", "iconPath": "static/icons/LearningIcon.png",  "selectedIconPath": "static/icons/LearningIcon-blue.png" },
+        { "pagePath": "pages/training/index", "text": "训练", "iconPath": "static/icons/TrainingIcon.png",   "selectedIconPath": "static/icons/TrainingIcon-blue.png" },
+        { "pagePath": "pages/exams/index", "text": "考试", "iconPath": "static/icons/ExamIcon.png",   "selectedIconPath": "static/icons/ExamIcon-blue.png" },
+        { "pagePath": "pages/user/index", "text": "我的", "iconPath": "static/icons/UserIcon.png",   "selectedIconPath": "static/icons/UserIcon-blue.png" }
+      ]
+    }
+}
