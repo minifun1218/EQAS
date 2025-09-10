@@ -13,13 +13,18 @@
     <cus-header title="考试介绍" @go-back="goBack">
     </cus-header>
 
+    <!-- 加载状态 -->
+    <view v-if="loading" class="loading-container">
+      <text class="loading-text">加载中...</text>
+    </view>
+
     <!-- 视频播放区域 -->
-    <view class="video-section">
+    <view v-if="!loading" class="video-section">
       <view class="video-container">
         <video 
           class="intro-video"
-          :src="videoUrl"
-          :poster="videoPoster"
+          :src="buildFullPath(examIntroData.video.url)"
+          :poster="examIntroData.video.poster"
           controls
           :show-fullscreen-btn="true"
           :show-play-btn="true"
@@ -36,16 +41,16 @@
         </view>
       </view>
       <view class="video-info">
-        <text class="video-title">ICAO4级英语考试介绍</text>
+        <text class="video-title">{{ examIntroData.videoTitle || 'ICAO4级英语考试介绍' }}</text>
         <view class="video-meta">
-          <text class="video-duration">时长：10分钟</text>
+          <text class="video-duration">时长：{{ examIntroData.videoDuration || '10分钟' }}</text>
           <view class="video-badge">官方介绍</view>
         </view>
       </view>
     </view>
 
     <!-- 图文介绍内容 -->
-    <view class="content-section">
+    <view v-if="!loading" class="content-section">
       <view class="section-header">
         <text class="section-title">考试概述</text>
         <text class="section-subtitle">全面了解ICAO英语等级考试</text>
@@ -86,7 +91,7 @@
           <text class="card-title">考试内容</text>
         </view>
         <view class="content-list">
-          <view class="content-item" v-for="(item, index) in examContent" :key="index">
+          <view class="content-item" v-for="(item, index) in examIntroData.examContent" :key="index">
             <view class="content-info">
               <text class="content-name">{{ item.name }}</text>
               <text class="content-desc">{{ item.description }}</text>
@@ -101,7 +106,7 @@
           <text class="card-title">评分标准</text>
         </view>
         <view class="scoring-list">
-          <view class="scoring-item" v-for="(item, index) in scoringCriteria" :key="index">
+          <view class="scoring-item" v-for="(item, index) in examIntroData.scoringCriteria" :key="index">
             <view class="scoring-header">
               <text class="scoring-name">{{ item.name }}</text>
               <view class="scoring-weight">{{ item.weight }}</view>
@@ -117,7 +122,7 @@
           <text class="card-title">备考建议</text>
         </view>
         <view class="tips-list">
-          <view class="tip-item" v-for="(tip, index) in studyTips" :key="index">
+          <view class="tip-item" v-for="(tip, index) in examIntroData.studyTips" :key="index">
             <view class="tip-number">{{ index + 1 }}</view>
             <text class="tip-text">{{ tip }}</text>
           </view>
@@ -128,68 +133,60 @@
 </template>
 
 <script>
+import { studyApi } from '@/api/index.js'
 import CusNavbar from "../../components/cus-navbar.vue";
 import CusHeader from "../../components/cus-header.vue";
+import {buildFullPath} from "../../utils/pathUtils";
 
 export default {
   name: 'ExamIntro',
   components: {CusHeader, CusNavbar},
   data() {
     return {
-      videoUrl: '/static/videos/icao-intro.mp4',
-      videoPoster: '/static/images/video-poster.jpg',
-      isVideoPlaying: false,
-      examContent: [
-        {
-          name: '听力理解',
-          description: '测试对航空英语对话和指令的理解能力'
+      loading: false,
+      examIntroData: {
+        video: {
+          url: '',
+          poster: '',
+          title: '',
         },
-        {
-          name: '口语表达',
-          description: '评估航空情境下的英语口语交流能力'
-        },
-        {
-          name: '阅读理解',
-          description: '考查对航空技术文档的阅读理解能力'
-        },
-        {
-          name: '书面表达',
-          description: '测试航空相关的英语写作和表达能力'
-        }
-      ],
-      scoringCriteria: [
-        {
-          name: '发音',
-          weight: '25%',
-          description: '清晰度、重音、语调和节奏的准确性'
-        },
-        {
-          name: '结构',
-          weight: '25%',
-          description: '语法结构的正确性和复杂性'
-        },
-        {
-          name: '词汇',
-          weight: '25%',
-          description: '词汇量的丰富性和使用的准确性'
-        },
-        {
-          name: '流利度',
-          weight: '25%',
-          description: '语言表达的流畅性和自然性'
-        }
-      ],
-      studyTips: [
-        '熟悉航空专业术语和标准通话用语',
-        '多听航空英语对话，提高听力理解能力',
-        '练习口语表达，注重发音和语调',
-        '阅读航空技术文档，扩大专业词汇量',
-        '参加模拟考试，熟悉考试流程和题型',
-        '保持良好的学习习惯，制定合理的复习计划'
-      ]
+        examContent: [],
+        scoringCriteria: [],
+        studyTips: []
+      },
+      isVideoPlaying: false
     }
   },
+  
+  mounted() {
+    this.loadExamIntroData()
+  },
   methods: {
+    buildFullPath,
+    async loadExamIntroData() {
+      try {
+        this.loading = true
+        const response = await studyApi.getExamIntroData()
+        
+        if (response.code === 200) {
+          this.examIntroData = response.data
+        } else {
+          uni.showToast({
+            title: response.message || '加载失败',
+            icon: 'none'
+          })
+        }
+      } catch (error) {
+        console.error('加载考试介绍数据失败:', error)
+        uni.showToast({
+          title: '网络错误，请重试',
+          icon: 'none'
+        })
+      } finally {
+        this.loading = false
+      }
+    },
+    
     goBack() {
       uni.navigateBack()
     },
@@ -214,6 +211,18 @@ export default {
 .exam-intro-container {
   min-height: 100vh;
   background: #f5f7fa;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400rpx;
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #5f6368;
 }
 
 .video-section {

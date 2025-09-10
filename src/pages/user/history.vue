@@ -327,6 +327,8 @@
 </template>
 
 <script>
+import { analyticsApi, studyApi } from '@/api/index.js'
+
 export default {
   name: 'History',
   data() {
@@ -371,110 +373,8 @@ export default {
         { key: 'type', name: '按类型排序' }
       ],
       
-      practiceHistory: [
-        {
-          id: 1,
-          type: 'listening',
-          startTime: '2024-01-17T09:30:00Z',
-          duration: 1800, // 30分钟
-          score: 92,
-          totalQuestions: 20,
-          correctAnswers: 18,
-          wrongAnswers: 2,
-          achievements: [
-            { id: 1, name: '听力达人', icon: '🎯', description: '听力练习获得90分以上' }
-          ],
-          knowledgePoints: [
-            { name: '航班信息', mastery: 95 },
-            { name: '时间表达', mastery: 88 },
-            { name: '地点描述', mastery: 92 }
-          ]
-        },
-        {
-          id: 2,
-          type: 'vocabulary',
-          startTime: '2024-01-17T14:15:00Z',
-          duration: 900, // 15分钟
-          score: 85,
-          totalQuestions: 30,
-          correctAnswers: 26,
-          wrongAnswers: 4,
-          achievements: [],
-          knowledgePoints: [
-            { name: '航空词汇', mastery: 85 },
-            { name: '专业术语', mastery: 80 },
-            { name: '常用短语', mastery: 90 }
-          ]
-        },
-        {
-          id: 3,
-          type: 'speaking',
-          startTime: '2024-01-16T16:45:00Z',
-          duration: 2400, // 40分钟
-          score: 78,
-          totalQuestions: 10,
-          correctAnswers: 8,
-          wrongAnswers: 2,
-          achievements: [],
-          knowledgePoints: [
-            { name: '发音准确性', mastery: 75 },
-            { name: '语法正确性', mastery: 80 },
-            { name: '流利度', mastery: 78 }
-          ]
-        },
-        {
-          id: 4,
-          type: 'exam',
-          startTime: '2024-01-16T10:00:00Z',
-          duration: 3600, // 60分钟
-          score: 88,
-          totalQuestions: 50,
-          correctAnswers: 44,
-          wrongAnswers: 6,
-          achievements: [
-            { id: 2, name: '考试高手', icon: '🏆', description: '模拟考试获得85分以上' }
-          ],
-          knowledgePoints: [
-            { name: '综合能力', mastery: 88 },
-            { name: '应试技巧', mastery: 85 },
-            { name: '时间管理', mastery: 90 }
-          ]
-        },
-        {
-          id: 5,
-          type: 'listening',
-          startTime: '2024-01-15T11:20:00Z',
-          duration: 1200, // 20分钟
-          score: 95,
-          totalQuestions: 15,
-          correctAnswers: 14,
-          wrongAnswers: 1,
-          achievements: [
-            { id: 3, name: '完美主义', icon: '💯', description: '单次练习正确率达到95%以上' }
-          ],
-          knowledgePoints: [
-            { name: '机场广播', mastery: 98 },
-            { name: '客舱服务', mastery: 92 },
-            { name: '紧急情况', mastery: 95 }
-          ]
-        },
-        {
-          id: 6,
-          type: 'grammar',
-          startTime: '2024-01-15T08:30:00Z',
-          duration: 600, // 10分钟
-          score: 72,
-          totalQuestions: 25,
-          correctAnswers: 18,
-          wrongAnswers: 7,
-          achievements: [],
-          knowledgePoints: [
-            { name: '时态运用', mastery: 70 },
-            { name: '语态转换', mastery: 75 },
-            { name: '从句结构', mastery: 68 }
-          ]
-        }
-      ]
+      practiceHistory: [],
+      loading: false
     }
   },
   
@@ -586,14 +486,49 @@ export default {
       return Object.values(groups).sort((a, b) => new Date(b.date) - new Date(a.date))
     }
   },
-  
+  onLoad() {
+    this.loadPracticeHistory()
+  },
   methods: {
+    async loadPracticeHistory() {
+      this.loading = true
+      try {
+        const params = {
+          timeRange: this.activeTimeFilter,
+          types: this.selectedTypes.length > 0 ? this.selectedTypes : undefined,
+          scoreRange: this.selectedScoreRange !== 'all' ? this.selectedScoreRange : undefined,
+          sort: this.selectedSort
+        }
+        
+        const response = await analyticsApi.getPracticeHistory(params)
+        
+        if (response.code === 200) {
+          this.practiceHistory = response.data || []
+        } else {
+          uni.showToast({
+            title: '获取历史记录失败',
+            icon: 'none'
+          })
+        }
+      } catch (error) {
+        console.error('获取练习历史失败:', error)
+        uni.showToast({
+          title: '网络错误，请重试',
+          icon: 'none'
+        })
+      } finally {
+        this.loading = false
+      }
+    },
     goBack() {
       uni.navigateBack()
     },
     
-    switchTimeFilter(filter) {
+    async switchTimeFilter(filter) {
+      if (this.activeTimeFilter === filter) return
+      
       this.activeTimeFilter = filter
+      await this.loadPracticeHistory()
     },
     
     showFilterModal() {
@@ -627,13 +562,42 @@ export default {
       this.selectedSort = 'time'
     },
     
-    applyFilters() {
+    async applyFilters() {
       this.hideFilterModal()
+      await this.loadPracticeHistory()
     },
     
-    viewSessionDetail(session) {
-      this.selectedSession = session
-      this.showDetailModal = true
+    async viewSessionDetail(session) {
+      try {
+        uni.showLoading({
+          title: '加载中...'
+        })
+        
+        // 获取练习详情
+        const response = await analyticsApi.getPracticeDetail(session.id)
+        
+        if (response.code === 200) {
+          this.selectedSession = response.data || session
+        } else {
+          this.selectedSession = session
+          uni.showToast({
+            title: '获取详情失败',
+            icon: 'none'
+          })
+        }
+        
+        uni.hideLoading()
+        this.showDetailModal = true
+      } catch (error) {
+        console.error('获取练习详情失败:', error)
+        this.selectedSession = session
+        uni.hideLoading()
+        uni.showToast({
+          title: '网络错误，请重试',
+          icon: 'none'
+        })
+        this.showDetailModal = true
+      }
     },
     
     hideDetailModal() {

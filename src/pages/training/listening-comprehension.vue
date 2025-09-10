@@ -15,6 +15,10 @@
         <text class="progress-text">第 {{currentQuestion + 1}} 题 / 共 {{questions.length}} 题</text>
         <text class="score-text">得分: {{score}}</text>
       </view>
+      <!-- 作答时间显示 -->
+      <view v-if="isAnswerTimeActive" class="answer-time-info">
+        <text class="answer-time-text">作答时间: {{answerTimeLeft}}秒</text>
+      </view>
       <view class="progress-bar">
         <view class="progress-fill" :style="{width: progressWidth}"></view>
       </view>
@@ -51,16 +55,22 @@
         <view 
           v-for="(option, index) in currentQuestionData.options" 
           :key="index"
+          v-show="!showOptionsRestricted || index === 0"
           class="option-item"
           :class="{
             'selected': selectedAnswer === index,
             'correct': showResult && index === currentQuestionData.correctAnswer,
-            'wrong': showResult && selectedAnswer === index && index !== currentQuestionData.correctAnswer
+            'wrong': showResult && selectedAnswer === index && index !== currentQuestionData.correctAnswer,
+            'disabled': showOptionsRestricted && index !== 0
           }"
           @click="selectAnswer(index)"
         >
           <view class="option-label">{{String.fromCharCode(65 + index)}}</view>
           <text class="option-text">{{option}}</text>
+        </view>
+        <!-- 播放时的提示信息 -->
+        <view v-if="showOptionsRestricted" class="options-hint">
+          <text class="hint-text">录音播放中，仅显示第一个选项。播放完成后将显示所有选项。</text>
         </view>
       </view>
     </view>
@@ -71,14 +81,14 @@
         <button 
           class="btn btn-replay" 
           @click="replayAudio"
-          :disabled="isPlaying"
+          :disabled="hasPlayedOnce || isPlaying"
         >
-          重播音频
+          {{hasPlayedOnce ? '已播放' : '重播音频'}}
         </button>
         <button 
           class="btn btn-submit" 
           @click="submitAnswer"
-          :disabled="selectedAnswer === null || showResult"
+          :disabled="selectedAnswer === null || showResult || showOptionsRestricted"
         >
           提交答案
         </button>
@@ -137,6 +147,8 @@
 </template>
 
 <script>
+import { trainingApi } from '@/api/index.js'
+
 export default {
   name: 'ListeningComprehension',
   data() {
@@ -150,52 +162,23 @@ export default {
       currentTime: 0,
       duration: 180, // 3分钟
       showCompleteModal: false,
-      questions: [
-        {
-          id: 1,
-          title: '塔台与飞行员通话 - 起飞许可',
-          audioUrl: '/static/audio/listening1.mp3',
-          question: '根据听到的对话，飞行员被许可在哪条跑道起飞？',
-          options: [
-            '跑道 09L',
-            '跑道 09R', 
-            '跑道 27L',
-            '跑道 27R'
-          ],
-          correctAnswer: 1,
-          explanation: '在对话中，塔台明确指示"Runway 09R, cleared for takeoff"，因此正确答案是跑道 09R。'
-        },
-        {
-          id: 2,
-          title: '进近管制通话 - 高度指令',
-          audioUrl: '/static/audio/listening2.mp3',
-          question: '管制员要求飞机保持的高度是多少？',
-          options: [
-            '3000英尺',
-            '4000英尺',
-            '5000英尺', 
-            '6000英尺'
-          ],
-          correctAnswer: 2,
-          explanation: '管制员在通话中说"Maintain 5000 feet"，要求飞机保持5000英尺高度。'
-        },
-        {
-          id: 3,
-          title: '紧急情况通话 - 燃油不足',
-          audioUrl: '/static/audio/listening3.mp3',
-          question: '飞行员报告的紧急情况是什么？',
-          options: [
-            '发动机故障',
-            '燃油不足',
-            '液压系统故障',
-            '通讯设备故障'
-          ],
-          correctAnswer: 1,
-          explanation: '飞行员在通话中明确报告"Low fuel, request priority landing"，表示燃油不足需要优先降落。'
-        }
-      ]
+      loading: false,
+      questions: [],
+      // 新增字段
+      hasPlayedOnce: false, // 是否已播放过一次
+      answerTimeLeft: 15, // 剩余作答时间（秒）
+      answerTimer: null, // 作答计时器
+      isAnswerTimeActive: false, // 是否在作答时间内
+      speechRate: 110, // 语速控制（每分钟词数）
+      showOptionsRestricted: false, // 是否限制显示选项
+      answerHistory: [] // 答题历史记录
     }
   },
+  
+  onLoad() {
+    this.loadQuestions()
+  },
+  
   computed: {
     currentQuestionData() {
       return this.questions[this.currentQuestion] || {}
@@ -208,14 +191,102 @@ export default {
     }
   },
   methods: {
+    async loadQuestions() {
+      this.loading = true
+      try {
+        const response = await trainingApi.getListeningQuestions({
+          speechRate: this.speechRate, // 传递语速参数
+          format: 'multiple-choice' // 指定四选一格式
+        })
+        if (response.code === 200) {
+          // 确保所有题目都是四选一格式
+          this.questions = response.data.map(question => {
+            // 如果选项不足4个，补充默认选项
+            while (question.options.length < 4) {
+              question.options.push('选项待补充')
+            }
+            // 如果选项超过4个，只取前4个
+            if (question.options.length > 4) {
+              question.options = question.options.slice(0, 4)
+              // 确保正确答案索引不超出范围
+              if (question.correctAnswer >= 4) {
+                question.correctAnswer = 0
+              }
+            }
+            // 根据语速计算音频时长
+            question.duration = this.calculateQuestionDuration(question)
+            return question
+          })
+        } else {
+          uni.showToast({
+            title: '加载题目失败',
+            icon: 'none'
+          })
+        }
+      } catch (error) {
+        console.error('加载听力题目失败:', error)
+        uni.showToast({
+          title: '网络错误',
+          icon: 'none'
+        })
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async submitTrainingResult() {
+      try {
+        // 计算详细统计信息
+        const totalTime = this.answerHistory.reduce((sum, answer) => sum + answer.timeUsed, 0)
+        const averageTime = totalTime / this.questions.length
+        
+        const result = {
+          trainingType: 'listening-comprehension',
+          totalQuestions: this.questions.length,
+          correctCount: this.correctCount,
+          score: this.score,
+          accuracy: Math.round(this.correctCount / this.questions.length * 100),
+          completedAt: new Date().toISOString(),
+          // 新增详细信息
+          speechRate: this.speechRate,
+          totalTime: totalTime,
+          averageTime: Math.round(averageTime * 100) / 100,
+          answerHistory: this.answerHistory,
+          trainingSettings: {
+            playOnce: true, // 每段录音只播放一次
+            answerTimeLimit: 15, // 15秒作答时间
+            optionsFormat: 'four-choice', // 四选一格式
+            autoScoring: true // 自动评分
+          }
+        }
+        
+        const response = await trainingApi.submitTrainingResult(result)
+        if (response.code === 200) {
+          console.log('训练结果提交成功')
+        }
+      } catch (error) {
+        console.error('提交训练结果失败:', error)
+      }
+    },
+    
     goBack() {
       uni.navigateBack()
     },
     togglePlay() {
+      // 如果已经播放过一次，不允许再次播放
+      if (this.hasPlayedOnce && !this.isPlaying) {
+        uni.showToast({
+          title: '每段录音只能播放一次',
+          icon: 'none'
+        })
+        return
+      }
+      
       this.isPlaying = !this.isPlaying
       // 这里应该控制实际的音频播放
       if (this.isPlaying) {
         this.startAudioTimer()
+        this.showOptionsRestricted = true // 播放时限制选项显示
       } else {
         this.stopAudioTimer()
       }
@@ -225,7 +296,9 @@ export default {
         this.currentTime += 1
         if (this.currentTime >= this.duration) {
           this.isPlaying = false
-          this.currentTime = 0
+          this.hasPlayedOnce = true // 标记已播放过一次
+          this.showOptionsRestricted = false // 播放结束后显示所有选项
+          this.startAnswerTimer() // 开始作答计时
           clearInterval(this.audioTimer)
         }
       }, 1000)
@@ -236,9 +309,11 @@ export default {
       }
     },
     replayAudio() {
-      this.currentTime = 0
-      this.isPlaying = true
-      this.startAudioTimer()
+      // 移除重播功能，因为每段录音只能播放一次
+      uni.showToast({
+        title: '每段录音只能播放一次',
+        icon: 'none'
+      })
     },
     selectAnswer(index) {
       if (!this.showResult) {
@@ -248,22 +323,56 @@ export default {
     submitAnswer() {
       if (this.selectedAnswer === null) return
       
+      this.stopAnswerTimer() // 停止作答计时
       this.showResult = true
-      if (this.selectedAnswer === this.currentQuestionData.correctAnswer) {
+      
+      // 自动评分逻辑
+      const isCorrect = this.selectedAnswer === this.currentQuestionData.correctAnswer
+      if (isCorrect) {
         this.correctCount++
-        this.score += 10
+        // 根据剩余时间给分，最高10分
+        const timeBonus = Math.max(0, this.answerTimeLeft)
+        const baseScore = 8 // 基础分
+        const bonusScore = Math.min(2, timeBonus * 0.1) // 时间奖励分
+        const questionScore = Math.round(baseScore + bonusScore)
+        this.score += questionScore
+        
+        uni.showToast({
+          title: `答对了！+${questionScore}分`,
+          icon: 'success'
+        })
+      } else {
+        uni.showToast({
+          title: '答错了',
+          icon: 'none'
+        })
       }
+      
+      // 记录答题结果
+      this.recordAnswer({
+        questionIndex: this.currentQuestion,
+        selectedAnswer: this.selectedAnswer,
+        correctAnswer: this.currentQuestionData.correctAnswer,
+        isCorrect: isCorrect,
+        timeUsed: 15 - this.answerTimeLeft
+      })
     },
     nextQuestion() {
+      this.stopAnswerTimer() // 停止作答计时
       if (this.currentQuestion < this.questions.length - 1) {
         this.currentQuestion++
         this.selectedAnswer = null
         this.showResult = false
         this.currentTime = 0
         this.isPlaying = false
+        this.hasPlayedOnce = false // 重置播放状态
+        this.answerTimeLeft = 15 // 重置作答时间
+        this.isAnswerTimeActive = false
+        this.showOptionsRestricted = false
         this.stopAudioTimer()
       } else {
         this.showCompleteModal = true
+        this.submitTrainingResult()
       }
     },
     restartTraining() {
@@ -275,7 +384,14 @@ export default {
       this.currentTime = 0
       this.isPlaying = false
       this.showCompleteModal = false
+      // 重置新增字段
+      this.hasPlayedOnce = false
+      this.answerTimeLeft = 15
+      this.isAnswerTimeActive = false
+      this.showOptionsRestricted = false
+      this.answerHistory = []
       this.stopAudioTimer()
+      this.stopAnswerTimer()
     },
     closeModal() {
       this.showCompleteModal = false
@@ -284,10 +400,70 @@ export default {
       const mins = Math.floor(seconds / 60)
       const secs = seconds % 60
       return `${mins}:${secs.toString().padStart(2, '0')}`
+    },
+    
+    // 新增方法
+    startAnswerTimer() {
+      this.isAnswerTimeActive = true
+      this.answerTimeLeft = 15
+      this.answerTimer = setInterval(() => {
+        this.answerTimeLeft--
+        if (this.answerTimeLeft <= 0) {
+          this.stopAnswerTimer()
+          // 时间到自动提交答案（如果已选择）或跳过
+          if (this.selectedAnswer !== null) {
+            this.submitAnswer()
+          } else {
+            uni.showToast({
+              title: '作答时间已到',
+              icon: 'none'
+            })
+            this.nextQuestion()
+          }
+        }
+      }, 1000)
+    },
+    
+    stopAnswerTimer() {
+      if (this.answerTimer) {
+        clearInterval(this.answerTimer)
+        this.answerTimer = null
+      }
+      this.isAnswerTimeActive = false
+    },
+    
+    calculateAudioDuration() {
+      // 根据语速计算音频时长
+      // 假设每题平均50个词，根据语速计算时长
+      const wordsPerQuestion = 50
+      const wordsPerSecond = this.speechRate / 60
+      return Math.ceil(wordsPerQuestion / wordsPerSecond)
+    },
+    
+    calculateQuestionDuration(question) {
+      // 根据题目内容和语速计算具体时长
+      const questionText = question.question || ''
+      const optionsText = question.options.join(' ')
+      const totalText = questionText + ' ' + optionsText
+      const wordCount = totalText.split(' ').length
+      const wordsPerSecond = this.speechRate / 60
+      return Math.max(30, Math.ceil(wordCount / wordsPerSecond)) // 最少30秒
+    },
+    
+    recordAnswer(answerData) {
+      // 记录答题数据，用于后续分析
+      if (!this.answerHistory) {
+        this.answerHistory = []
+      }
+      this.answerHistory.push({
+        ...answerData,
+        timestamp: new Date().toISOString()
+      })
     }
   },
   beforeDestroy() {
     this.stopAudioTimer()
+    this.stopAnswerTimer()
   }
 }
 </script>
@@ -344,6 +520,22 @@ export default {
 .progress-text, .score-text {
   font-size: 28rpx;
   color: #666;
+}
+
+/* 作答时间显示 */
+.answer-time-info {
+  text-align: center;
+  margin-bottom: 15rpx;
+}
+
+.answer-time-text {
+  font-size: 30rpx;
+  color: #ff6b35;
+  font-weight: bold;
+  background: #fff3f0;
+  padding: 10rpx 20rpx;
+  border-radius: 20rpx;
+  border: 2rpx solid #ff6b35;
 }
 
 .progress-bar {
@@ -476,6 +668,11 @@ export default {
   background: #fff2f0;
 }
 
+.option-item.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 .option-label {
   width: 60rpx;
   height: 60rpx;
@@ -509,6 +706,22 @@ export default {
   flex: 1;
   font-size: 28rpx;
   color: #333;
+  line-height: 1.4;
+}
+
+/* 选项限制提示 */
+.options-hint {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  background: #f0f9ff;
+  border: 2rpx solid #4facfe;
+  border-radius: 10rpx;
+  text-align: center;
+}
+
+.hint-text {
+  font-size: 26rpx;
+  color: #4facfe;
   line-height: 1.4;
 }
 
@@ -558,6 +771,12 @@ export default {
 
 .btn[disabled] {
   opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-replay[disabled] {
+  background: #e0e0e0;
+  color: #999;
 }
 
 /* 答案解析 */

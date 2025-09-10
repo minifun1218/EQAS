@@ -249,173 +249,57 @@
 </template>
 
 <script>
+import { studyApi, analyticsApi } from '@/api/index.js'
+
 export default {
   name: 'Progress',
   data() {
     return {
       overviewStats: {
-        studyDays: 18,
-        studyHours: 45,
-        completedLessons: 32,
-        averageScore: 85
+        studyDays: 0,
+        studyHours: 0,
+        completedLessons: 0,
+        averageScore: 0
       },
-      courseProgress: [
-        {
-          id: 1,
-          name: '听力理解',
-          icon: '🎧',
-          color: '#4facfe',
-          completedLessons: 8,
-          totalLessons: 12,
-          progress: 67
-        },
-        {
-          id: 2,
-          name: '口语表达',
-          icon: '🗣️',
-          color: '#43e97b',
-          completedLessons: 6,
-          totalLessons: 10,
-          progress: 60
-        },
-        {
-          id: 3,
-          name: '词汇学习',
-          icon: '📚',
-          color: '#fa709a',
-          completedLessons: 15,
-          totalLessons: 20,
-          progress: 75
-        },
-        {
-          id: 4,
-          name: '模拟考试',
-          icon: '📝',
-          color: '#feca57',
-          completedLessons: 3,
-          totalLessons: 8,
-          progress: 38
-        }
-      ],
-      currentMonth: '2024年1月',
+      courseProgress: [],
+      loading: true,
+      currentMonth: '',
       weekdays: ['日', '一', '二', '三', '四', '五', '六'],
       calendarDays: [],
-      achievements: [
-        {
-          id: 1,
-          name: '初学者',
-          description: '完成第一次学习',
-          icon: '🌟',
-          unlocked: true,
-          unlockedDate: '2024-01-01'
-        },
-        {
-          id: 2,
-          name: '坚持者',
-          description: '连续学习7天',
-          icon: '🔥',
-          unlocked: true,
-          unlockedDate: '2024-01-08'
-        },
-        {
-          id: 3,
-          name: '听力达人',
-          description: '听力练习100题',
-          icon: '🎯',
-          unlocked: false,
-          progress: 65,
-          current: 65,
-          target: 100
-        },
-        {
-          id: 4,
-          name: '完美主义',
-          description: '获得10次满分',
-          icon: '💯',
-          unlocked: false,
-          progress: 30,
-          current: 3,
-          target: 10
-        },
-        {
-          id: 5,
-          name: '学习狂人',
-          description: '单日学习超过2小时',
-          icon: '⚡',
-          unlocked: false,
-          progress: 80,
-          current: 96,
-          target: 120
-        },
-        {
-          id: 6,
-          name: '词汇大师',
-          description: '掌握500个单词',
-          icon: '📖',
-          unlocked: false,
-          progress: 45,
-          current: 225,
-          target: 500
-        }
-      ],
+      achievements: [],
       chartTabs: [
         { key: 'time', name: '学习时长' },
         { key: 'accuracy', name: '正确率' },
         { key: 'distribution', name: '内容分布' }
       ],
       activeTab: 'time',
-      timeChartData: [
-        { day: '周一', minutes: 45 },
-        { day: '周二', minutes: 60 },
-        { day: '周三', minutes: 30 },
-        { day: '周四', minutes: 75 },
-        { day: '周五', minutes: 90 },
-        { day: '周六', minutes: 120 },
-        { day: '周日', minutes: 85 }
-      ],
-      accuracyChartData: [
-        { day: '周一', accuracy: 85 },
-        { day: '周二', accuracy: 92 },
-        { day: '周三', accuracy: 78 },
-        { day: '周四', accuracy: 88 },
-        { day: '周五', accuracy: 95 },
-        { day: '周六', accuracy: 82 },
-        { day: '周日', accuracy: 90 }
-      ],
-      distributionData: [
-        { type: 'listening', name: '听力练习', percent: 35, color: '#4facfe' },
-        { type: 'speaking', name: '口语练习', percent: 25, color: '#43e97b' },
-        { type: 'vocabulary', name: '词汇学习', percent: 20, color: '#fa709a' },
-        { type: 'exam', name: '模拟考试', percent: 20, color: '#feca57' }
-      ],
-      learningGoals: [
-        {
-          id: 1,
-          name: '每日学习时长',
-          current: 45,
-          target: 60,
-          unit: '分钟'
-        },
-        {
-          id: 2,
-          name: '本周完成课程',
-          current: 3,
-          target: 5,
-          unit: '节'
-        },
-        {
-          id: 3,
-          name: '本月练习题目',
-          current: 120,
-          target: 200,
-          unit: '题'
-        }
-      ]
+      timeChartData: [],
+      accuracyChartData: [],
+      distributionData: [],
+      learningGoals: []
     }
   },
   
   onLoad() {
-    this.generateCalendar()
+    this.loading = true
+    this.initCurrentMonth()
+    Promise.all([
+      this.loadOverviewStats(),
+      this.loadCourseProgress(),
+      this.loadAchievements(),
+      this.loadChartData(),
+      this.loadLearningGoals(),
+      this.generateCalendar()
+    ]).then(() => {
+      this.loading = false
+    }).catch(error => {
+      console.error('加载数据失败:', error)
+      this.loading = false
+      uni.showToast({
+        title: '加载失败，请重试',
+        icon: 'none'
+      })
+    })
   },
   
   methods: {
@@ -430,35 +314,104 @@ export default {
       })
     },
     
-    prevMonth() {
-      // 切换到上个月
-      uni.showToast({
-        title: '切换到上个月',
-        icon: 'none'
-      })
+    async prevMonth() {
+      try {
+        const [year, month] = this.currentMonth.replace('年', '-').replace('月', '').split('-')
+        let newYear = parseInt(year)
+        let newMonth = parseInt(month) - 1
+        
+        if (newMonth < 1) {
+          newMonth = 12
+          newYear -= 1
+        }
+        
+        this.currentMonth = `${newYear}年${newMonth}月`
+        await this.generateCalendar()
+      } catch (error) {
+        console.error('切换月份失败:', error)
+      }
     },
     
-    nextMonth() {
-      // 切换到下个月
-      uni.showToast({
-        title: '切换到下个月',
-        icon: 'none'
-      })
+    async nextMonth() {
+      try {
+        const [year, month] = this.currentMonth.replace('年', '-').replace('月', '').split('-')
+        let newYear = parseInt(year)
+        let newMonth = parseInt(month) + 1
+        
+        if (newMonth > 12) {
+          newMonth = 1
+          newYear += 1
+        }
+        
+        this.currentMonth = `${newYear}年${newMonth}月`
+        await this.generateCalendar()
+      } catch (error) {
+        console.error('切换月份失败:', error)
+      }
     },
     
-    generateCalendar() {
-      // 生成日历数据
+    async generateCalendar() {
+      try {
+        // 生成日历数据
+        const today = new Date()
+        const year = today.getFullYear()
+        const month = today.getMonth()
+        const firstDay = new Date(year, month, 1)
+        const lastDay = new Date(year, month + 1, 0)
+        const startDate = new Date(firstDay)
+        startDate.setDate(startDate.getDate() - firstDay.getDay())
+        
+        // 获取学习日期数据
+        const response = await analyticsApi.getStudyCalendar({
+          year: year,
+          month: month + 1 // API需要1-12的月份
+        })
+        
+        let studiedDates = []
+        let streakDates = []
+        
+        if (response.code === 200) {
+          studiedDates = response.data.studiedDates || []
+          streakDates = response.data.streakDates || []
+        }
+        
+        const days = []
+        
+        for (let i = 0; i < 42; i++) {
+          const date = new Date(startDate)
+          date.setDate(startDate.getDate() + i)
+          const dateStr = date.getDate()
+          
+          const day = {
+            date: date.toISOString().split('T')[0],
+            day: date.getDate(),
+            otherMonth: date.getMonth() !== month,
+            isToday: date.toDateString() === today.toDateString(),
+            studied: studiedDates.includes(dateStr) && date.getMonth() === month,
+            streak: streakDates.includes(dateStr) && date.getMonth() === month
+          }
+          
+          days.push(day)
+        }
+        
+        this.calendarDays = days
+      } catch (error) {
+        console.error('获取日历数据失败:', error)
+        // 生成空日历
+        this.generateEmptyCalendar()
+      }
+    },
+    
+    generateEmptyCalendar() {
+      // 生成空日历数据作为降级方案
       const today = new Date()
       const year = today.getFullYear()
       const month = today.getMonth()
       const firstDay = new Date(year, month, 1)
-      const lastDay = new Date(year, month + 1, 0)
       const startDate = new Date(firstDay)
       startDate.setDate(startDate.getDate() - firstDay.getDay())
       
       const days = []
-      const studiedDates = [1, 3, 5, 7, 8, 9, 12, 15, 18, 20, 22] // 模拟已学习日期
-      const streakDates = [7, 8, 9] // 模拟连续学习日期
       
       for (let i = 0; i < 42; i++) {
         const date = new Date(startDate)
@@ -469,14 +422,85 @@ export default {
           day: date.getDate(),
           otherMonth: date.getMonth() !== month,
           isToday: date.toDateString() === today.toDateString(),
-          studied: studiedDates.includes(date.getDate()) && date.getMonth() === month,
-          streak: streakDates.includes(date.getDate()) && date.getMonth() === month
+          studied: false,
+          streak: false
         }
         
         days.push(day)
       }
       
       this.calendarDays = days
+    },
+    
+    async loadOverviewStats() {
+      try {
+        const response = await analyticsApi.getStudyOverview()
+        if (response.code === 200) {
+          this.overviewStats = response.data || {
+            studyDays: 0,
+            studyHours: 0,
+            completedLessons: 0,
+            averageScore: 0
+          }
+        }
+      } catch (error) {
+        console.error('获取学习概览失败:', error)
+      }
+    },
+    
+    async loadCourseProgress() {
+      try {
+        const response = await studyApi.getCourseProgress()
+        if (response.code === 200) {
+          this.courseProgress = response.data || []
+        }
+      } catch (error) {
+        console.error('获取课程进度失败:', error)
+      }
+    },
+    
+    async loadAchievements() {
+      try {
+        const response = await analyticsApi.getAchievements()
+        if (response.code === 200) {
+          this.achievements = response.data || []
+        }
+      } catch (error) {
+        console.error('获取成就数据失败:', error)
+      }
+    },
+    
+    async loadChartData() {
+      try {
+        // 获取图表数据
+        const timeResponse = await analyticsApi.getStudyTimeChart()
+        if (timeResponse.code === 200) {
+          this.timeChartData = timeResponse.data || []
+        }
+        
+        const accuracyResponse = await analyticsApi.getAccuracyChart()
+        if (accuracyResponse.code === 200) {
+          this.accuracyChartData = accuracyResponse.data || []
+        }
+        
+        const distributionResponse = await analyticsApi.getStudyDistribution()
+        if (distributionResponse.code === 200) {
+          this.distributionData = distributionResponse.data || []
+        }
+      } catch (error) {
+        console.error('获取图表数据失败:', error)
+      }
+    },
+    
+    async loadLearningGoals() {
+      try {
+        const response = await studyApi.getLearningGoals()
+        if (response.code === 200) {
+          this.learningGoals = response.data || []
+        }
+      } catch (error) {
+        console.error('获取学习目标失败:', error)
+      }
     },
     
     viewAchievement(achievement) {
@@ -497,10 +521,42 @@ export default {
     },
     
     editGoals() {
-      uni.showToast({
-        title: '编辑学习目标',
-        icon: 'none'
+      uni.navigateTo({
+        url: '/pages/study/goals'
       })
+    },
+    
+    initCurrentMonth() {
+      const now = new Date()
+      const year = now.getFullYear()
+      const month = now.getMonth() + 1
+      this.currentMonth = `${year}年${month}月`
+    },
+    
+    async refreshData() {
+      this.loading = true
+      try {
+        await Promise.all([
+          this.loadOverviewStats(),
+          this.loadCourseProgress(),
+          this.loadAchievements(),
+          this.loadChartData(),
+          this.loadLearningGoals(),
+          this.generateCalendar()
+        ])
+        uni.showToast({
+          title: '刷新成功',
+          icon: 'success'
+        })
+      } catch (error) {
+        console.error('刷新数据失败:', error)
+        uni.showToast({
+          title: '刷新失败',
+          icon: 'none'
+        })
+      } finally {
+        this.loading = false
+      }
     }
   }
 }

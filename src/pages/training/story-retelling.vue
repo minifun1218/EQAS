@@ -52,7 +52,8 @@
           </view>
           <view class="audio-info">
             <text class="audio-duration">{{formatTime(storyCurrentTime)}} / {{formatTime(storyDuration)}}</text>
-            <text class="play-count">已播放 {{playCount}} 次</text>
+            <text class="play-count">已播放 {{playCount}} / {{maxPlayCount}} 次</text>
+            <text v-if="isInInterval" class="interval-time">间隔时间: {{intervalTime}}秒</text>
           </view>
         </view>
         <view class="audio-progress">
@@ -69,8 +70,12 @@
       </view>
 
       <view class="story-actions">
-        <button class="btn btn-replay" @click="replayStory">重新播放</button>
-        <button class="btn btn-next" @click="startRetelling" :disabled="playCount === 0">开始复述</button>
+        <button class="btn btn-replay" @click="replayStory" :disabled="playCount >= maxPlayCount || isInInterval">
+          {{isInInterval ? `间隔中(${intervalTime}s)` : '重新播放'}}
+        </button>
+        <button class="btn btn-next" @click="startRetelling" :disabled="playCount === 0">
+          {{playCount >= maxPlayCount ? '开始复述' : '开始复述'}}
+        </button>
       </view>
     </view>
 
@@ -78,7 +83,8 @@
     <view v-if="currentStep === 2" class="recording-section">
       <view class="recording-header">
         <text class="recording-title">请复述刚才听到的故事</text>
-        <text class="recording-tip">建议录音时长: {{currentStoryData.suggestedDuration}}秒</text>
+        <text class="recording-tip">剩余时间: {{preparationTime}}秒</text>
+        <text class="recording-instruction">录音材料长度约100-120词，请在300秒内完成复述</text>
       </view>
 
       <view class="recording-controls">
@@ -107,9 +113,11 @@
       </view>
 
       <view class="recording-actions">
-        <button class="btn btn-secondary" @click="goBackToStory">重新听故事</button>
-        <button class="btn btn-record" @click="restartRecording" v-if="hasRecording">重新录音</button>
-        <button class="btn btn-submit" @click="submitRecording" :disabled="!hasRecording">提交录音</button>
+        <button class="btn btn-secondary" @click="goBackToStory" :disabled="preparationTime <= 0">重新听故事</button>
+        <button class="btn btn-record" @click="restartRecording" v-if="hasRecording" :disabled="preparationTime <= 0">重新录音</button>
+        <button class="btn btn-submit" @click="submitRecording" :disabled="!hasRecording || preparationTime <= 0">
+          {{preparationTime <= 0 ? '时间已到' : '提交录音'}}
+        </button>
       </view>
     </view>
 
@@ -209,10 +217,13 @@
 </template>
 
 <script>
+import { getStoryRetellingStories, submitStoryRetellingResult } from '@/api/training'
+
 export default {
   name: 'StoryRetelling',
   data() {
     return {
+      loading: false,
       currentStory: 0,
       currentStep: 1, // 1: 听故事, 2: 录音复述, 3: 查看评分
       totalScore: 0,
@@ -220,15 +231,25 @@ export default {
       // 故事播放相关
       isStoryPlaying: false,
       storyCurrentTime: 0,
-      storyDuration: 120,
+      storyDuration: 120, // 录音材料时长（100-120词对应约60-90秒）
       playCount: 0,
+      maxPlayCount: 2, // 最多播放2遍
+      isInInterval: false, // 是否在两遍播放间隔中
+      intervalTime: 0, // 间隔倒计时
+      
+      // 时间控制相关
+      totalTimeLimit: 300, // 5分钟总时长
+      preparationTime: 300, // 300秒准备和复述时间
+      currentTime: 0, // 当前已用时间
+      preparationTimer: null,
+      totalTimer: null,
       
       // 录音相关
       isRecording: false,
       hasRecording: false,
       recordingTime: 0,
       recordingDuration: 0,
-      recordingStatus: '点击开始录音',
+      recordingStatus: '准备阶段，可开始录音',
       
       // 回放相关
       isPlayingBack: false,
@@ -238,33 +259,11 @@ export default {
       currentResult: {},
       showCompleteModal: false,
       
-      stories: [
-        {
-          id: 1,
-          title: '紧急迫降程序',
-          difficulty: '中级',
-          audioUrl: '/static/audio/story1.mp3',
-          suggestedDuration: 90,
-          content: '昨天下午，一架从北京飞往上海的航班在飞行过程中遇到了紧急情况。飞行员发现左侧发动机出现异常，立即按照标准程序联系了地面管制。管制员迅速为该航班安排了优先降落，并通知了机场的紧急救援队伍。飞行员冷静地执行了单发动机降落程序，最终安全降落在备降机场。所有乘客和机组人员都安然无恙，这次成功的紧急处置体现了飞行员的专业素养和良好的应急反应能力。'
-        },
-        {
-          id: 2,
-          title: '恶劣天气飞行',
-          difficulty: '高级',
-          audioUrl: '/static/audio/story2.mp3',
-          suggestedDuration: 100,
-          content: '在一个雷雨交加的夜晚，机长李华正驾驶着一架大型客机准备降落。天气雷达显示前方有强对流天气，能见度极低。塔台通知跑道湿滑，侧风达到了临界值。李华凭借丰富的飞行经验，选择了合适的进近方式，调整了飞行速度和高度。在最后的关键时刻，他果断决定复飞，重新规划航线。经过20分钟的等待，天气条件有所改善，飞机最终安全着陆。这次飞行充分展现了飞行员在复杂气象条件下的决策能力和技术水平。'
-        },
-        {
-          id: 3,
-          title: '国际航线协调',
-          difficulty: '高级',
-          audioUrl: '/static/audio/story3.mp3',
-          suggestedDuration: 110,
-          content: '在执行跨洋国际航线任务时，机组需要与多个国家的管制部门进行协调。飞行员王明在飞越太平洋时，需要按照国际民航组织的标准程序，定时报告位置和高度。由于时差和语言差异，沟通变得更加复杂。在飞行过程中，他们遇到了航路拥堵，需要申请改变飞行高度层。通过与各国管制员的密切配合，飞机顺利通过了各个管制区域。这次飞行不仅考验了机组的专业技能，也体现了国际航空合作的重要性。整个航程历时12小时，最终准时到达目的地。'
-        }
-      ]
+      stories: []
     }
+  },
+  onLoad() {
+    this.loadStories()
   },
   computed: {
     currentStoryData() {
@@ -287,6 +286,10 @@ export default {
     
     // 故事播放相关方法
     toggleStoryPlay() {
+      if (this.playCount >= this.maxPlayCount || this.isInInterval) {
+        return
+      }
+      
       this.isStoryPlaying = !this.isStoryPlaying
       if (this.isStoryPlaying) {
         this.startStoryTimer()
@@ -305,6 +308,16 @@ export default {
           this.isStoryPlaying = false
           this.storyCurrentTime = 0
           clearInterval(this.storyTimer)
+          
+          // 检查是否需要播放第二遍
+          if (this.playCount === 1) {
+            this.startInterval()
+          } else if (this.playCount >= this.maxPlayCount) {
+            // 播放完成，自动进入复述阶段
+            setTimeout(() => {
+              this.startRetelling()
+            }, 1000)
+          }
         }
       }, 1000)
     },
@@ -315,7 +328,68 @@ export default {
       }
     },
     
+    // 间隔计时器相关方法
+    startInterval() {
+      this.isInInterval = true
+      this.intervalTime = 5 // 5秒间隔
+      
+      this.intervalTimer = setInterval(() => {
+        this.intervalTime -= 1
+        if (this.intervalTime <= 0) {
+          this.stopInterval()
+          // 自动开始第二遍播放
+          this.storyCurrentTime = 0
+          this.isStoryPlaying = true
+          this.playCount++
+          this.startStoryTimer()
+        }
+      }, 1000)
+    },
+    
+    stopInterval() {
+      this.isInInterval = false
+      this.intervalTime = 0
+      if (this.intervalTimer) {
+        clearInterval(this.intervalTimer)
+      }
+    },
+    
+    // 准备时间计时器
+    startPreparationTimer() {
+      this.preparationTime = 300 // 重置为300秒
+      this.recordingStatus = '准备时间：300秒，可开始录音'
+      
+      this.preparationTimer = setInterval(() => {
+        this.preparationTime -= 1
+        this.recordingStatus = `准备时间：${this.preparationTime}秒，可开始录音`
+        
+        if (this.preparationTime <= 0) {
+          this.stopPreparationTimer()
+          this.autoSubmitAndNext()
+        }
+      }, 1000)
+    },
+    
+    stopPreparationTimer() {
+      if (this.preparationTimer) {
+        clearInterval(this.preparationTimer)
+      }
+    },
+    
+    // 自动提交并跳转到下一题
+    async autoSubmitAndNext() {
+      if (this.hasRecording) {
+        await this.submitRecording()
+      } else {
+        // 没有录音，直接跳转
+        this.nextStory()
+      }
+    },
+    
     replayStory() {
+      if (this.playCount >= this.maxPlayCount) {
+        return
+      }
       this.storyCurrentTime = 0
       this.isStoryPlaying = true
       this.playCount++
@@ -325,6 +399,8 @@ export default {
     startRetelling() {
       this.currentStep = 2
       this.stopStoryTimer()
+      this.stopInterval()
+      this.startPreparationTimer()
     },
     
     // 录音相关方法
@@ -337,6 +413,10 @@ export default {
     },
     
     startRecording() {
+      if (this.preparationTime <= 0) {
+        return
+      }
+      
       this.isRecording = true
       this.recordingStatus = '正在录音...'
       this.recordingTime = 0
@@ -344,6 +424,10 @@ export default {
       
       this.recordingTimer = setInterval(() => {
         this.recordingTime += 1
+        // 检查是否超过准备时间
+        if (this.preparationTime <= 0) {
+          this.stopRecording()
+        }
       }, 1000)
     },
     
@@ -362,7 +446,7 @@ export default {
       this.recordingTime = 0
       this.recordingDuration = 0
       this.hasRecording = false
-      this.recordingStatus = '点击开始录音'
+      this.recordingStatus = '准备阶段，可开始录音'
       this.isPlayingBack = false
       this.playbackTime = 0
     },
@@ -398,10 +482,30 @@ export default {
       this.restartRecording()
     },
     
-    submitRecording() {
-      // 模拟评分过程
-      this.currentStep = 3
-      this.generateScore()
+    async submitRecording() {
+      try {
+        uni.showLoading({ title: '评分中...' })
+        
+        // 调用API提交录音并获取评分
+        const result = await submitStoryRetellingResult({
+          storyId: this.currentStoryData.id,
+          recordingData: 'base64_audio_data', // 实际录音数据
+          recordingDuration: this.recordingDuration
+        })
+        
+        this.currentResult = result
+        this.totalScore += result.totalScore
+        this.currentStep = 3
+        
+        uni.hideLoading()
+      } catch (error) {
+        uni.hideLoading()
+        uni.showToast({
+          title: '提交失败，请重试',
+          icon: 'none'
+        })
+        console.error('提交录音失败:', error)
+      }
     },
     
     // 评分相关方法
@@ -458,31 +562,55 @@ export default {
       this.storyCurrentTime = 0
       this.isStoryPlaying = false
       this.playCount = 0
+      this.isInInterval = false
+      this.intervalTime = 0
+      this.preparationTime = 300
+      this.stopStoryTimer()
+      this.stopInterval()
+      this.stopPreparationTimer()
       this.restartRecording()
       this.currentResult = {}
     },
     
-    nextStory() {
+    async nextStory() {
+      // 清理所有计时器
+      this.stopStoryTimer()
+      this.stopInterval()
+      this.stopPreparationTimer()
+      
       if (this.currentStory < this.stories.length - 1) {
         this.currentStory++
         this.currentStep = 1
         this.storyCurrentTime = 0
         this.isStoryPlaying = false
         this.playCount = 0
+        this.isInInterval = false
+        this.intervalTime = 0
+        this.preparationTime = 300
         this.restartRecording()
         this.currentResult = {}
       } else {
+        // 提交训练结果
+        await this.submitTrainingResult()
         this.showCompleteModal = true
       }
     },
     
     restartTraining() {
+      // 清理所有计时器
+      this.stopStoryTimer()
+      this.stopInterval()
+      this.stopPreparationTimer()
+      
       this.currentStory = 0
       this.currentStep = 1
       this.totalScore = 0
       this.storyCurrentTime = 0
       this.isStoryPlaying = false
       this.playCount = 0
+      this.isInInterval = false
+      this.intervalTime = 0
+      this.preparationTime = 300
       this.restartRecording()
       this.currentResult = {}
       this.showCompleteModal = false
@@ -496,11 +624,46 @@ export default {
       const mins = Math.floor(seconds / 60)
       const secs = seconds % 60
       return `${mins}:${secs.toString().padStart(2, '0')}`
+    },
+    
+    async loadStories() {
+      try {
+        this.loading = true
+        uni.showLoading({ title: '加载中...' })
+        
+        const data = await getStoryRetellingStories()
+        this.stories = data.stories || []
+        
+        uni.hideLoading()
+        this.loading = false
+      } catch (error) {
+        uni.hideLoading()
+        this.loading = false
+        uni.showToast({
+          title: '加载失败，请重试',
+          icon: 'none'
+        })
+        console.error('加载故事失败:', error)
+      }
+    },
+    
+    async submitTrainingResult() {
+      try {
+        await submitStoryRetellingResult({
+          totalScore: this.totalScore,
+          completedStories: this.stories.length,
+          averageScore: Math.round(this.totalScore / this.stories.length)
+        })
+      } catch (error) {
+        console.error('提交训练结果失败:', error)
+      }
     }
   },
   
   beforeDestroy() {
     this.stopStoryTimer()
+    this.stopInterval()
+    this.stopPreparationTimer()
     if (this.recordingTimer) clearInterval(this.recordingTimer)
     this.stopPlaybackTimer()
   }
@@ -713,6 +876,13 @@ export default {
   color: #999;
 }
 
+.interval-time {
+  font-size: 24rpx;
+  color: #ff6b35;
+  font-weight: bold;
+  margin-top: 5rpx;
+}
+
 .audio-progress {
   height: 6rpx;
   background: #f0f0f0;
@@ -774,8 +944,17 @@ export default {
 }
 
 .recording-tip {
+  font-size: 28rpx;
+  color: #ff6b35;
+  margin-top: 10rpx;
+  font-weight: bold;
+}
+
+.recording-instruction {
   font-size: 24rpx;
-  color: #999;
+  color: #666;
+  margin-top: 10rpx;
+  line-height: 1.4;
 }
 
 .recording-controls {
@@ -1016,6 +1195,18 @@ export default {
 
 .btn[disabled] {
   opacity: 0.5;
+}
+
+.btn-replay:disabled {
+  background: #f0f0f0;
+  color: #999;
+  border: 2rpx solid #ddd;
+}
+
+.btn-submit:disabled {
+  background: #ffebee;
+  color: #f44336;
+  border: 2rpx solid #f44336;
 }
 
 /* 完成弹窗 */

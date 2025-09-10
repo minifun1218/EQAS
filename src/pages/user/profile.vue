@@ -162,6 +162,7 @@
 
 <script>
 import CusNavbar from "../../components/cus-navbar.vue";
+import { userApi, systemApi } from '@/api/index.js';
 
 export default {
   name: 'UserProfile',
@@ -169,44 +170,130 @@ export default {
   data() {
     return {
       userInfo: {
-        id: '20240001',
-        name: '张三',
-        role: '航空学员',
-        school: '中国民航大学',
-        phone: '138****8888',
-        email: 'zhangsan@example.com',
+        id: '',
+        name: '',
+        role: '',
+        school: '',
+        phone: '',
+        email: '',
         avatar: '/static/icons/user-avatar.png',
-        studyDays: 45,
-        studyHours: 128,
-        completedExams: 12,
-        averageScore: 85
+        studyDays: 0,
+        studyHours: 0,
+        completedExams: 0,
+        averageScore: 0
       },
       settings: {
         notification: true,
         sound: true,
         language: '中文'
       },
-      cacheSize: '12.5MB'
+      cacheSize: '0MB',
+      loading: true
     }
   },
+  async onLoad() {
+    await this.loadUserProfile();
+  },
   methods: {
+    async loadUserProfile() {
+      try {
+        this.loading = true;
+        
+        // 获取用户基本信息
+        const userRes = await userApi.getUserInfo();
+        if (userRes.code === 200) {
+          this.userInfo = {
+            id: userRes.data.id || '',
+            name: userRes.data.name || '',
+            role: userRes.data.role || '',
+            school: userRes.data.school || '',
+            phone: userRes.data.phone || '',
+            email: userRes.data.email || '',
+            avatar: userRes.data.avatar || '/static/icons/user-avatar.png',
+            studyDays: userRes.data.studyDays || 0,
+            studyHours: userRes.data.studyHours || 0,
+            completedExams: userRes.data.completedExams || 0,
+            averageScore: userRes.data.averageScore || 0
+          };
+        }
+        
+        // 获取用户设置
+        await this.loadUserSettings();
+        
+        // 获取缓存大小
+        await this.loadCacheSize();
+        
+      } catch (error) {
+        console.error('加载用户资料失败:', error);
+        uni.showToast({
+          title: '数据加载失败',
+          icon: 'none'
+        });
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    async loadUserSettings() {
+      try {
+        const res = await systemApi.getSystemConfig();
+        if (res.code === 200 && res.data.userSettings) {
+          this.settings = {
+            notification: res.data.userSettings.notification !== false,
+            sound: res.data.userSettings.sound !== false,
+            language: res.data.userSettings.language || '中文'
+          };
+        }
+      } catch (error) {
+        console.error('加载用户设置失败:', error);
+      }
+    },
+    
+    async loadCacheSize() {
+      try {
+        const res = await systemApi.getSystemConfig();
+        if (res.code === 200 && res.data.cacheSize) {
+          this.cacheSize = res.data.cacheSize;
+        }
+      } catch (error) {
+        console.error('获取缓存大小失败:', error);
+      }
+    },
+    
     goBack() {
       uni.navigateBack()
     },
     
-    changeAvatar() {
-      uni.chooseImage({
-        count: 1,
-        sizeType: ['compressed'],
-        sourceType: ['album', 'camera'],
-        success: (res) => {
-          this.userInfo.avatar = res.tempFilePaths[0]
+    async changeAvatar() {
+      try {
+        const res = await new Promise((resolve, reject) => {
+          uni.chooseImage({
+            count: 1,
+            sizeType: ['compressed'],
+            sourceType: ['album', 'camera'],
+            success: resolve,
+            fail: reject
+          });
+        });
+        
+        // 上传头像到服务器
+        const uploadRes = await userApi.uploadAvatar(res.tempFilePaths[0]);
+        if (uploadRes.code === 200) {
+          this.userInfo.avatar = uploadRes.data.avatarUrl;
           uni.showToast({
             title: '头像更新成功',
             icon: 'success'
-          })
+          });
+        } else {
+          throw new Error(uploadRes.message || '上传失败');
         }
-      })
+      } catch (error) {
+        console.error('更换头像失败:', error);
+        uni.showToast({
+          title: '头像更新失败',
+          icon: 'none'
+        });
+      }
     },
     
     editName() {
@@ -243,18 +330,38 @@ export default {
       })
     },
     
-    showEditDialog(title, currentValue, callback) {
+    async showEditDialog(title, currentValue, callback) {
       uni.showModal({
         title: `编辑${title}`,
         editable: true,
         placeholderText: `请输入${title}`,
-        success: (res) => {
+        success: async (res) => {
           if (res.confirm && res.content) {
-            callback(res.content)
-            uni.showToast({
-              title: '修改成功',
-              icon: 'success'
-            })
+            try {
+              // 更新到服务器
+              const updateData = {};
+              if (title === '姓名') updateData.name = res.content;
+              if (title === '学校') updateData.school = res.content;
+              if (title === '手机号') updateData.phone = res.content;
+              if (title === '邮箱') updateData.email = res.content;
+              
+              const updateRes = await userApi.updateUserInfo(updateData);
+              if (updateRes.code === 200) {
+                callback(res.content);
+                uni.showToast({
+                  title: '修改成功',
+                  icon: 'success'
+                });
+              } else {
+                throw new Error(updateRes.message || '更新失败');
+              }
+            } catch (error) {
+              console.error('更新用户信息失败:', error);
+              uni.showToast({
+                title: '修改失败',
+                icon: 'none'
+              });
+            }
           }
         }
       })

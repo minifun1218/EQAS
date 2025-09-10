@@ -1,12 +1,19 @@
 <template>
   <view class="result-container">
-    <!-- 顶部标题栏 -->
-    <view class="header">
-      <view class="title">ICAO4 考试结果</view>
-      <view class="exam-type">{{ examTypeText }}</view>
+    <!-- 加载状态 -->
+    <view v-if="loading" class="loading-container">
+      <view class="loading-text">正在加载考试结果...</view>
     </view>
+    
+    <!-- 考试结果内容 -->
+    <view v-if="!loading" class="result-content">
+      <!-- 顶部标题栏 -->
+      <view class="header">
+        <view class="title">ICAO4 考试结果</view>
+        <view class="exam-type">{{ examTypeText }}</view>
+      </view>
 
-    <!-- 总体成绩卡片 -->
+      <!-- 总体成绩卡片 -->
     <view class="overall-score-card">
       <view class="score-circle">
         <view class="score-number">{{ overallScore }}</view>
@@ -226,77 +233,42 @@
         <text class="footer-text">继续训练</text>
       </button>
     </view>
+    </view>
   </view>
 </template>
 
 <script>
+import { examsApi } from '@/api/index.js'
 
 export default {
   data() {
     return {
       examLevel: 'primary', // primary 或 secondary
-      overallScore: 85,
-      examDate: '2024-01-15 14:30',
+      overallScore: 0,
+      examDate: '',
+      examId: '',
+      loading: false,
       
       // 模块成绩数据
       moduleScores: [],
       
       // 能力分析
-      abilities: [
-        { name: '听力理解', level: 4, score: 88 },
-        { name: '口语表达', level: 4, score: 82 },
-        { name: '语音语调', level: 3, score: 78 },
-        { name: '词汇运用', level: 4, score: 85 },
-        { name: '语法准确性', level: 3, score: 80 },
-        { name: '流利度', level: 4, score: 87 }
-      ],
+      abilities: [],
       
       // 优势表现
-      strengths: [
-        '听力理解能力优秀，能够准确理解复杂的航空通话内容',
-        '口语表达流利，发音清晰，语调自然',
-        '专业词汇掌握扎实，能够准确使用航空术语',
-        '应急情况处理反应迅速，思路清晰'
-      ],
+      strengths: [],
       
       // 改进建议
-      suggestions: [
-        '加强语法结构的准确性，特别是复杂句式的运用',
-        '提高语音语调的标准化程度，注意重音和节奏',
-        '增强词汇量，学习更多专业术语和表达方式',
-        '多练习模拟通话，提高实际应用能力'
-      ],
+      suggestions: [],
       
       // 学习资源推荐
-      resources: [
-        {
-          title: '航空英语听力训练',
-          description: '专业的航空通话听力练习材料',
-          type: 'training',
-          url: '/pages/training/listening'
-        },
-        {
-          title: '口语发音纠正课程',
-          description: '针对性的发音和语调训练',
-          type: 'course',
-          url: '/pages/courses/pronunciation'
-        },
-        {
-          title: '航空词汇手册',
-          description: '完整的航空专业词汇学习资料',
-          type: 'material',
-          url: '/pages/materials/vocabulary'
-        },
-        {
-          title: '模拟通话练习',
-          description: '真实场景的通话模拟训练',
-          type: 'simulation',
-          url: '/pages/training/communication'
-        }
-      ],
+      resources: [],
       
       // 历史成绩
-      historyScores: [75, 78, 82, 80, 85]
+      historyScores: [],
+      
+      // 错误处理
+      loadError: false
     }
   },
   
@@ -344,67 +316,91 @@ export default {
     if (options.level) {
       this.examLevel = options.level
     }
-    this.initializeModuleScores()
+    if (options.examId) {
+      this.examId = options.examId
+    }
+    this.loadExamResult()
   },
   
   methods: {
-    initializeModuleScores() {
-      if (this.examLevel === 'primary') {
-        this.moduleScores = [
-          {
-            name: '听力理解',
-            score: 88,
-            duration: '25分钟',
-            accuracy: 92,
-            fluency: '良好'
-          },
-          {
-            name: '故事复述',
-            score: 82,
-            duration: '15分钟',
-            accuracy: 85,
-            fluency: '良好'
-          },
-          {
-            name: '听力简答',
-            score: 85,
-            duration: '20分钟',
-            accuracy: 88,
-            fluency: '优秀'
-          },
-          {
-            name: '模拟通话',
-            score: 80,
-            duration: '30分钟',
-            accuracy: 82,
-            fluency: '一般'
-          },
-          {
-            name: '口语面试',
-            score: 87,
-            duration: '25分钟',
-            accuracy: 90,
-            fluency: '优秀'
-          }
-        ]
-      } else {
-        this.moduleScores = [
-          {
-            name: '模拟通话',
-            score: 83,
-            duration: '45分钟',
-            accuracy: 85,
-            fluency: '良好'
-          },
-          {
-            name: '口语面试',
-            score: 87,
-            duration: '35分钟',
-            accuracy: 90,
-            fluency: '优秀'
-          }
-        ]
+    async loadExamResult() {
+      try {
+        this.loading = true
+        this.loadError = false
+        const response = await examsApi.getExamResult(this.examId || 'latest', this.examLevel)
+        if (response.code === 200) {
+          const result = response.data.examResult || response.data
+          
+          // 基本信息
+          this.overallScore = result.overallScore || 0
+          this.examDate = result.examDate || new Date().toLocaleDateString()
+          
+          // 模块成绩
+          this.moduleScores = result.moduleScores || []
+          
+          // 能力分析
+          this.abilities = result.abilityAnalysis || []
+          
+          // 优势表现
+          this.strengths = result.strengths || []
+          
+          // 改进建议
+          this.suggestions = result.suggestions || []
+          
+          // 学习资源推荐
+          this.resources = result.recommendedResources || []
+          
+          // 历史成绩
+          this.historyScores = result.historyScores || []
+        } else {
+          throw new Error(response.message || '获取考试结果失败')
+        }
+      } catch (error) {
+        console.error('加载考试结果失败:', error)
+        this.loadError = true
+        uni.showToast({
+          title: '加载失败，请重试',
+          icon: 'error'
+        })
+        // 设置默认数据以防止页面崩溃
+        this.setDefaultResultData()
+      } finally {
+        this.loading = false
       }
+    },
+    
+    setDefaultResultData() {
+      this.overallScore = 0
+      this.examDate = new Date().toLocaleDateString()
+      this.moduleScores = [
+        { name: '听力理解', score: 0, duration: '0分钟', accuracy: 0, fluency: '—' },
+        { name: '故事复述', score: 0, duration: '0分钟', accuracy: 0, fluency: '—' },
+        { name: '听力简答', score: 0, duration: '0分钟', accuracy: 0, fluency: '—' },
+        { name: '模拟通话', score: 0, duration: '0分钟', accuracy: 0, fluency: '—' },
+        { name: '口语面试', score: 0, duration: '0分钟', accuracy: 0, fluency: '—' }
+      ]
+      this.abilities = [
+        { name: '发音准确性', score: 0 },
+        { name: '语法正确性', score: 0 },
+        { name: '词汇丰富度', score: 0 },
+        { name: '流利度', score: 0 },
+        { name: '理解能力', score: 0 },
+        { name: '交际能力', score: 0 }
+      ]
+      this.strengths = ['数据加载中...']
+      this.suggestions = ['数据加载中...']
+      this.resources = []
+      this.historyScores = [0]
+    },
+    initializeModuleScores() {
+      // 保留原有的初始化逻辑作为备用（用于无接口数据时的占位展示）
+      this.moduleScores = [
+        { name: '听力理解', score: 0, duration: '0分钟', accuracy: 0, fluency: '—' },
+        { name: '故事复述', score: 0, duration: '0分钟', accuracy: 0, fluency: '—' },
+        { name: '听力简答', score: 0, duration: '0分钟', accuracy: 0, fluency: '—' },
+        { name: '模拟通话', score: 0, duration: '0分钟', accuracy: 0, fluency: '—' },
+        { name: '口语面试', score: 0, duration: '0分钟', accuracy: 0, fluency: '—' }
+      ]
     },
     
     getScoreClass(score) {
@@ -1024,6 +1020,18 @@ export default {
 
 .footer-text {
   font-size: 22rpx;
+  color: #6c757d;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+.loading-text {
+  font-size: 28rpx;
   color: #6c757d;
 }
 </style>

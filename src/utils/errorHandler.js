@@ -183,6 +183,20 @@ class ErrorHandler {
    * @param {object} event 事件对象
    */
   handleUnhandledRejection(event) {
+    // 检查是否是Chrome扩展相关的错误
+    const reason = event.reason
+    const reasonStr = String(reason)
+    
+    // 忽略Chrome扩展和开发者工具相关的错误
+    if (reasonStr.includes('message port closed') || 
+        reasonStr.includes('runtime.lastError') ||
+        reasonStr.includes('Extension context invalidated') ||
+        reasonStr.includes('chrome-extension://')) {
+      // 静默处理这些错误，不记录日志
+      event.preventDefault()
+      return
+    }
+    
     this.logError('UNHANDLED_REJECTION', {
       reason: event.reason,
       promise: event.promise

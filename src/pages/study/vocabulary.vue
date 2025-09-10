@@ -12,8 +12,13 @@
     <cus-header title="高频词汇表" @goBack="goBack">
     </cus-header>
 
+    <!-- 加载状态 -->
+    <view v-if="loading" class="loading-container">
+      <text class="loading-text">加载中...</text>
+    </view>
+
     <!-- 主题筛选 -->
-    <view class="topic-filter">
+    <view v-if="!loading" class="topic-filter">
       <scroll-view class="topic-scroll" scroll-x="true">
         <view class="topic-list">
           <view
@@ -39,7 +44,7 @@
     </view>
 
     <!-- 词汇列表 -->
-    <view class="vocabulary-content">
+    <view v-if="!loading" class="vocabulary-content">
       <view class="vocabulary-list">
         <view
             v-for="word in filteredWords"
@@ -74,7 +79,7 @@
     </view>
 
     <!-- 开始学习按钮 -->
-    <view class="study-button-container">
+    <view v-if="!loading" class="study-button-container">
       <button class="study-button" @click="startStudy">
         <text class="study-text">开始学习</text>
       </button>
@@ -182,6 +187,18 @@ export default {
   min-height: 100vh;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   padding-bottom: 100rpx;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400rpx;
+}
+
+.loading-text {
+  font-size: 32rpx;
+  color: #64748b;
 }
 
 .header {

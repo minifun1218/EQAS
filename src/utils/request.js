@@ -2,6 +2,8 @@
 import { API_CONFIG, STORAGE_CONFIG } from '@/config/index'
 import { showToast, showLoading, hideLoading } from '@/utils/index'
 import { handleApiError, handleBusinessError } from '@/utils/errorHandler'
+import { buildFullPath, isFullUrl } from '@/utils/pathUtils'
+import { isResponseSuccess, getResponseError } from '@/utils/responseHandler'
 
 // 基础配置
 const BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:8080' : 'https://api.example.com'
@@ -9,9 +11,9 @@ const TIMEOUT = 10000
 
 // 请求拦截器
 function requestInterceptor(options) {
-  // 添加基础URL
-  if (!options.url.startsWith('http')) {
-    options.url = BASE_URL + options.url
+  // 使用路径处理工具构建完整URL
+  if (!isFullUrl(options.url)) {
+    options.url = buildFullPath(options.url, { baseUrl: BASE_URL })
   }
   
   // 设置超时时间
@@ -59,14 +61,16 @@ function responseInterceptor(response, options) {
     
     // 处理业务状态码
     if (data && typeof data === 'object') {
-      if (data.code === 0 || data.success === true) {
+      // 使用统一的响应成功判断
+      if (isResponseSuccess(data)) {
         return Promise.resolve(data)
       } else if (data.code === 401 || data.code === 403) {
         // 认证失败，清除token并跳转登录
         uni.removeStorageSync('token')
         uni.removeStorageSync('userInfo')
+        const authErrorMessage = getResponseError(data) || '登录已过期，请重新登录'
         uni.showToast({
-          title: data.message || '登录已过期，请重新登录',
+          title: authErrorMessage,
           icon: 'none'
         })
         setTimeout(() => {
@@ -74,14 +78,20 @@ function responseInterceptor(response, options) {
             url: '/pages/auth/login'
           })
         }, 1500)
-        return Promise.reject(new Error(data.message || '认证失败'))
+        return Promise.reject(new Error(authErrorMessage))
       } else {
-        // 其他业务错误
-        uni.showToast({
-          title: data.message || '请求失败',
-          icon: 'none'
-        })
-        return Promise.reject(new Error(data.message || '请求失败'))
+        // 其他业务错误 - 使用统一的错误信息提取
+        const errorMessage = getResponseError(data)
+        
+        // 避免显示误导性的成功消息作为错误
+        if (errorMessage && !['success', 'ok', '成功'].includes(errorMessage.toLowerCase())) {
+          uni.showToast({
+            title: errorMessage,
+            icon: 'none'
+          })
+        }
+        
+        return Promise.reject(new Error(errorMessage))
       }
     }
     
@@ -145,7 +155,9 @@ function errorInterceptor(error, options) {
   // 使用统一错误处理
   handleApiError(error, { showMessage: true, logError: true })
   
-  return Promise.reject(error)
+  // 确保错误被正确包装，避免未捕获的Promise拒绝
+  const wrappedError = error instanceof Error ? error : new Error(String(error))
+  return Promise.reject(wrappedError)
 }
 
 // 封装的请求方法

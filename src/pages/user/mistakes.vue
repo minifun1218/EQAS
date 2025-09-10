@@ -258,6 +258,8 @@
 </template>
 
 <script>
+import { studyApi, analyticsApi } from '@/api/index.js'
+
 export default {
   name: 'Mistakes',
   data() {
@@ -285,86 +287,8 @@ export default {
         { key: 'difficulty', name: '按难度' }
       ],
       
-      mistakes: [
-        {
-          id: 1,
-          type: 'listening',
-          question: 'What is the departure time for Flight CA1234?',
-          myAnswer: 'A. 14:30',
-          correctAnswer: 'B. 15:30',
-          explanation: '根据广播内容，CA1234航班的起飞时间是15:30，不是14:30。注意听清楚时间表达。',
-          status: 'new',
-          reviewCount: 0,
-          createdAt: '2024-01-15T10:30:00Z',
-          lastReviewAt: null,
-          difficulty: 'medium'
-        },
-        {
-          id: 2,
-          type: 'vocabulary',
-          question: 'The aircraft is experiencing severe _______.',
-          myAnswer: 'weather',
-          correctAnswer: 'turbulence',
-          explanation: 'turbulence指的是飞机遇到的气流颠簸，是航空领域的专业词汇。weather太宽泛，不够准确。',
-          status: 'reviewing',
-          reviewCount: 2,
-          createdAt: '2024-01-14T16:20:00Z',
-          lastReviewAt: '2024-01-16T09:15:00Z',
-          difficulty: 'hard'
-        },
-        {
-          id: 3,
-          type: 'speaking',
-          question: 'How would you handle a passenger complaint about delayed baggage?',
-          myAnswer: '我会告诉乘客等待',
-          correctAnswer: 'I would apologize sincerely, explain the situation, provide compensation options, and ensure follow-up tracking.',
-          explanation: '处理乘客投诉需要专业的服务态度和完整的解决方案，包括道歉、解释、补偿和跟进。',
-          status: 'mastered',
-          reviewCount: 5,
-          createdAt: '2024-01-13T14:45:00Z',
-          lastReviewAt: '2024-01-17T11:30:00Z',
-          difficulty: 'hard'
-        },
-        {
-          id: 4,
-          type: 'grammar',
-          question: 'The pilot _______ the passengers about the weather conditions.',
-          myAnswer: 'told',
-          correctAnswer: 'informed',
-          explanation: 'inform是更正式和专业的表达，在航空服务中更常用。told过于口语化。',
-          status: 'new',
-          reviewCount: 0,
-          createdAt: '2024-01-16T08:15:00Z',
-          lastReviewAt: null,
-          difficulty: 'easy'
-        },
-        {
-          id: 5,
-          type: 'listening',
-          question: 'What gate number was announced for the boarding?',
-          myAnswer: 'Gate 12',
-          correctAnswer: 'Gate 21',
-          explanation: '注意听清楚数字的发音，12和21在英语中发音相似，需要仔细区分。',
-          status: 'reviewing',
-          reviewCount: 1,
-          createdAt: '2024-01-15T13:20:00Z',
-          lastReviewAt: '2024-01-16T15:45:00Z',
-          difficulty: 'medium'
-        },
-        {
-          id: 6,
-          type: 'reading',
-          question: 'According to the safety manual, what should passengers do during turbulence?',
-          myAnswer: 'Stand up and move around',
-          correctAnswer: 'Remain seated with seatbelts fastened',
-          explanation: '根据安全手册，遇到颠簸时乘客应该保持坐姿并系好安全带，绝不能站立走动。',
-          status: 'new',
-          reviewCount: 0,
-          createdAt: '2024-01-16T12:00:00Z',
-          lastReviewAt: null,
-          difficulty: 'easy'
-        }
-      ]
+      mistakes: [],
+      loading: false
     }
   },
   
@@ -421,35 +345,80 @@ export default {
   },
   
   onLoad() {
-    this.updateFilterCounts()
+    this.loadMistakes()
   },
   
   methods: {
+    async loadMistakes() {
+      this.loading = true
+      try {
+        const response = await studyApi.getMistakes({
+          type: this.activeFilter !== 'all' ? this.activeFilter : undefined,
+          sort: this.currentSort.key
+        })
+        
+        if (response.code === 200) {
+          this.mistakes = response.data || []
+          this.updateFilterCounts()
+        } else {
+          uni.showToast({
+            title: '获取错题失败',
+            icon: 'none'
+          })
+        }
+      } catch (error) {
+        console.error('获取错题失败:', error)
+        uni.showToast({
+          title: '网络错误，请重试',
+          icon: 'none'
+        })
+      } finally {
+        this.loading = false
+      }
+    },
+    
     goBack() {
       uni.navigateBack()
     },
     
-    clearAll() {
+    async clearAll() {
       uni.showModal({
         title: '确认清空',
         content: '确定要清空所有错题吗？此操作不可恢复。',
-        success: (res) => {
+        success: async (res) => {
           if (res.confirm) {
-            this.mistakes = []
-            this.selectedMistakes = []
-            this.updateFilterCounts()
-            uni.showToast({
-              title: '已清空错题本',
-              icon: 'success'
-            })
+            try {
+              const response = await studyApi.clearAllMistakes()
+              if (response.code === 200) {
+                this.mistakes = []
+                this.selectedMistakes = []
+                this.updateFilterCounts()
+                uni.showToast({
+                  title: '已清空错题本',
+                  icon: 'success'
+                })
+              } else {
+                uni.showToast({
+                  title: '清空失败',
+                  icon: 'none'
+                })
+              }
+            } catch (error) {
+              console.error('清空错题失败:', error)
+              uni.showToast({
+                title: '网络错误',
+                icon: 'none'
+              })
+            }
           }
         }
       })
     },
     
-    switchFilter(filter) {
+    async switchFilter(filter) {
       this.activeFilter = filter
       this.selectedMistakes = []
+      await this.loadMistakes()
     },
     
     showSortOptions() {
@@ -460,9 +429,10 @@ export default {
       this.showSortModal = false
     },
     
-    selectSort(option) {
+    async selectSort(option) {
       this.currentSort = option
       this.showSortModal = false
+      await this.loadMistakes()
     },
     
     viewMistakeDetail(mistake) {

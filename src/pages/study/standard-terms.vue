@@ -13,8 +13,13 @@
   <view class="standard-terms">
     <cus-header @goBack="goBack" title="标准通话用语"></cus-header>
 
+    <!-- 加载状态 -->
+    <view v-if="loading" class="loading-container">
+      <text class="loading-text">加载中...</text>
+    </view>
+
     <!-- 分类筛选 -->
-    <view class="category-filter">
+    <view v-if="!loading" class="category-filter">
       <scroll-view class="category-scroll" scroll-x="true">
         <view class="category-list">
           <view 
@@ -34,7 +39,7 @@
     </view>
 
     <!-- 术语列表 -->
-    <view class="terms-content">
+    <view v-if="!loading" class="terms-content">
       <view class="terms-list">
         <view 
           v-for="term in filteredTerms" 
@@ -73,7 +78,7 @@
     </view>
 
     <!-- 开始学习按钮 -->
-    <view class="study-button-container">
+    <view v-if="!loading" class="study-button-container">
       <button class="study-button" @click="startStudy">
         <image class="study-icon" src="/static/icons/play.png" mode="aspectFit"></image>
         <text class="study-text">开始学习</text>
@@ -187,6 +192,18 @@ export default {
   padding-bottom: 40rpx;
 }
 
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400rpx;
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #666666;
+}
+
 .header {
   background: linear-gradient(135deg, #667eea 0%);
 
@@ -253,6 +270,9 @@ export default {
   white-space: nowrap; /* 防止换行 */
   text-align: center;
   min-width: 120rpx; /* 比固定宽度更灵活 */
+  height: 64rpx; /* 固定高度 */
+  max-width: 200rpx; /* 最大宽度限制 */
+  overflow: hidden; /* 隐藏溢出内容 */
 }
 
 .category-item.active {
@@ -261,12 +281,19 @@ export default {
   justify-content: center; /* 水平居中 */
   white-space: nowrap;
   min-width: 120rpx; /* 比固定宽度更灵活 */
+  height: 64rpx; /* 固定高度 */
+  max-width: 200rpx; /* 最大宽度限制 */
+  overflow: hidden; /* 隐藏溢出内容 */
 }
 
 .category-name {
   font-size: 28rpx;
   color: #666666;
   margin-right: 8rpx;
+  overflow: hidden; /* 隐藏溢出内容 */
+  text-overflow: ellipsis; /* 显示省略号 */
+  white-space: nowrap; /* 防止换行 */
+  max-width: 140rpx; /* 限制文本最大宽度 */
 }
 
 .category-item.active .category-name {

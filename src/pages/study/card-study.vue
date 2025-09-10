@@ -23,8 +23,13 @@
       </view>
     </view>
 
+    <!-- 加载状态 -->
+    <view v-if="loading" class="loading-container">
+      <text class="loading-text">加载中...</text>
+    </view>
+
     <!-- 学习卡片 -->
-    <view class="card-container" v-if="currentItem">
+    <view class="card-container" v-if="!loading && currentItem">
       <view class="study-card" :class="{ flipped: isFlipped }" @click="flipCard">
         <!-- 正面 -->
         <view class="card-front">
@@ -138,13 +143,15 @@ export default {
   components: {CusHeader, CusNavbar},
   data() {
     return {
+      loading: false,
       studyItems: [],
       studyType: 'terms', // 'terms' 或 'words'
       currentIndex: 0,
       isFlipped: false,
       showCompleteModal: false,
       difficultItems: [],
-      learnedItems: []
+      learnedItems: [],
+      studyId: null
     }
   },
   computed: {
@@ -162,19 +169,47 @@ export default {
     }
   },
   onLoad(options) {
-
-    if (options.terms) {
-      this.studyItems = JSON.parse(decodeURIComponent(options.terms))
-      this.studyType = 'terms'
-    } else if (options.words) {
-      this.studyItems = JSON.parse(decodeURIComponent(options.words))
-      this.studyType = 'words'
-    }
-    
-    // 打乱学习顺序
-    this.shuffleArray(this.studyItems)
+    this.studyType = options.type || 'terms'
+    this.studyId = options.id
+    this.loadStudyData()
+  },
+  
+  mounted() {
+    // 组件挂载后的初始化逻辑
   },
   methods: {
+    async loadStudyData() {
+      try {
+        this.loading = true
+        let response
+        
+        if (this.studyType === 'terms') {
+          response = await studyApi.getTermsData(this.studyId)
+        } else {
+          response = await studyApi.getVocabularyData(this.studyId)
+        }
+        
+        if (response.code === 200) {
+          this.studyItems = response.data.items || []
+          // 打乱学习顺序
+          this.shuffleArray(this.studyItems)
+        } else {
+          uni.showToast({
+            title: response.message || '加载失败',
+            icon: 'none'
+          })
+        }
+      } catch (error) {
+        console.error('加载学习数据失败:', error)
+        uni.showToast({
+          title: '网络错误，请重试',
+          icon: 'none'
+        })
+      } finally {
+        this.loading = false
+      }
+    },
+    
     goBack() {
       uni.navigateBack()
     },
@@ -377,6 +412,18 @@ export default {
   background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
   border-radius: 4rpx;
   transition: width 0.3s ease;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400rpx;
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #64748b;
 }
 
 .card-container {

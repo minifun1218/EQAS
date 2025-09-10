@@ -5,48 +5,97 @@
     <!-- 顶部标题栏 -->
     <cus-header title="考试中心" @goBack="goBack"></cus-header>
 
-    <!-- 初试仿真 -->
-    <cus-exam-card
-        :title="primeTitle"
-        :desc="primeDesc"
-        :label-list="primeLabelList"
-        @start-primary-exam="startPrimaryExam">
-    </cus-exam-card>
+    <!-- 加载状态 -->
+    <view v-if="loading" class="loading-container">
+      <text class="loading-text">正在加载考试数据...</text>
+    </view>
 
-    <!-- 复试仿真 -->
-    <cus-exam-card
-        :title="reExamTitle"
-        :desc="reExamDesc"
-        :label-list="reExamLabelList"
-        @start-secondary-exam="startSecondaryExam">
-    </cus-exam-card>
+    <!-- 考试内容 -->
+    <view v-if="!loading">
+      <!-- 初试仿真 -->
+      <cus-exam-card
+          :title="primeTitle"
+          :desc="primeDesc"
+          :label-list="primeLabelList"
+          @start-primary-exam="startPrimaryExam">
+      </cus-exam-card>
+
+      <!-- 复试仿真 -->
+      <cus-exam-card
+          :title="reExamTitle"
+          :desc="reExamDesc"
+          :label-list="reExamLabelList"
+          @start-secondary-exam="startSecondaryExam">
+      </cus-exam-card>
+    </view>
   </view>
 </template>
 
 <script>
+import { examsApi } from '@/api/index.js'
 
 export default {
   name: 'ExamIndex',
   components: {},
   data() {
     return {
-      primeTitle: '初试模拟',
-      primeDesc: 'ICAO4初级考试模拟，包含听力理解、故事复述、听力简答三个模块',
-      primeLabelList: [
-        {key: '考试时长:', value: '45分钟'},
-        {key: '题目数量:', value: '约15-20题'},
-        {key: '难度等级:', value: 'Level 4-5'},
-      ],
-      reExamTitle: '复试模拟',
-      reExamDesc: 'ICAO4复试考试模拟，包含听力理解、故事复述、听力简答三个模块',
-      reExamLabelList: [
-        {key: '考试时长:', value: '45分钟'},
-        {key: '题目数量:', value: '约15-20题'},
-        {key: '难度等级:', value: 'Level 4-5'},
-      ],
+      primeTitle: '',
+      primeDesc: '',
+      primeLabelList: [],
+      reExamTitle: '',
+      reExamDesc: '',
+      reExamLabelList: [],
+      loading: false,
+      examData: {}
     }
   },
+  onLoad() {
+    this.loadExamData()
+  },
   methods: {
+    async loadExamData() {
+      try {
+        this.loading = true
+        const response = await examsApi.getExamList()
+        if (response.code === 200) {
+          const exams = response.data.exams || []
+          const primaryExam = exams.find(exam => exam.type === 'primary')
+          const secondaryExam = exams.find(exam => exam.type === 'secondary')
+          
+          if (primaryExam) {
+            this.primeTitle = primaryExam.title || '初试模拟'
+            this.primeDesc = primaryExam.description || 'ICAO4初级考试模拟'
+            this.primeLabelList = [
+              {key: '考试时长:', value: `${primaryExam.duration || 45}分钟`},
+              {key: '题目数量:', value: primaryExam.questionCount || '约15-20题'},
+              {key: '难度等级:', value: primaryExam.difficulty || 'Level 4-5'},
+            ]
+          }
+          
+          if (secondaryExam) {
+            this.reExamTitle = secondaryExam.title || '复试模拟'
+            this.reExamDesc = secondaryExam.description || 'ICAO4复试考试模拟'
+            this.reExamLabelList = [
+              {key: '考试时长:', value: `${secondaryExam.duration || 45}分钟`},
+              {key: '题目数量:', value: secondaryExam.questionCount || '约15-20题'},
+              {key: '难度等级:', value: secondaryExam.difficulty || 'Level 4-5'},
+            ]
+          }
+          
+          this.examData = response.data
+        }
+      } catch (error) {
+        console.error('加载考试数据失败:', error)
+        uni.showToast({
+          title: '加载失败，请重试',
+          icon: 'error'
+        })
+        // 使用默认数据
+        this.setDefaultData()
+      } finally {
+        this.loading = false
+      }
+    },
 
     goBack() {
       uni.navigateBack();
@@ -64,6 +113,24 @@ export default {
       uni.navigateTo({
         url: '/pages/exams/preexam?type=secondary'
       })
+    },
+
+    // 设置默认数据
+    setDefaultData() {
+      this.primeTitle = '初试模拟'
+      this.primeDesc = 'ICAO4初级考试模拟，包含听力理解、故事复述、听力简答三个模块'
+      this.primeLabelList = [
+        {key: '考试时长:', value: '45分钟'},
+        {key: '题目数量:', value: '约15-20题'},
+        {key: '难度等级:', value: 'Level 4-5'},
+      ]
+      this.reExamTitle = '复试模拟'
+      this.reExamDesc = 'ICAO4复试考试模拟，包含听力理解、故事复述、听力简答三个模块'
+      this.reExamLabelList = [
+        {key: '考试时长:', value: '45分钟'},
+        {key: '题目数量:', value: '约15-20题'},
+        {key: '难度等级:', value: 'Level 4-5'},
+      ]
     }
   }
 }
@@ -177,5 +244,23 @@ export default {
 :deep(.cus-navbar .navbar-title) {
   color: #1e293b;
   font-weight: 600;
+}
+
+/* 加载状态样式 */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 100rpx 0;
+  background: #ffffff;
+  border-radius: 16rpx;
+  margin: 24rpx 0;
+  box-shadow: 0 4rpx 20rpx rgba(148, 163, 184, 0.1);
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #64748b;
+  text-align: center;
 }
 </style>

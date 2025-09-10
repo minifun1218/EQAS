@@ -363,6 +363,8 @@
 </template>
 
 <script>
+import { userApi, systemApi } from '@/api/index.js'
+
 export default {
   name: 'Settings',
   data() {
@@ -385,10 +387,11 @@ export default {
         personalization: true
       },
       storageInfo: {
-        used: '128MB',
-        total: '1GB'
+        used: '0MB',
+        total: '0MB'
       },
-      cacheSize: '45MB',
+      cacheSize: '0MB',
+      loading: false,
       showModal: false,
       modalType: '',
       modalTitle: '',
@@ -408,7 +411,74 @@ export default {
       ]
     }
   },
+  
+  onLoad() {
+    this.loadSettings()
+  },
+  
   methods: {
+    async loadSettings() {
+      this.loading = true
+      try {
+        // 加载用户设置
+        const settingsResponse = await userApi.getUserSettings()
+        if (settingsResponse.code === 200) {
+          const settings = settingsResponse.data
+          this.studySettings = { ...this.studySettings, ...settings.study }
+          this.systemSettings = { ...this.systemSettings, ...settings.system }
+          this.privacySettings = { ...this.privacySettings, ...settings.privacy }
+        }
+        
+        // 加载存储信息
+        const storageResponse = await systemApi.getStorageInfo()
+        if (storageResponse.code === 200) {
+          this.storageInfo = storageResponse.data
+        }
+        
+        // 加载缓存大小
+        const cacheResponse = await systemApi.getCacheSize()
+        if (cacheResponse.code === 200) {
+          this.cacheSize = cacheResponse.data.size
+        }
+      } catch (error) {
+        console.error('加载设置失败:', error)
+        uni.showToast({
+          title: '加载设置失败',
+          icon: 'none'
+        })
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async saveSettings() {
+      try {
+        const settings = {
+          study: this.studySettings,
+          system: this.systemSettings,
+          privacy: this.privacySettings
+        }
+        
+        const response = await userApi.updateUserSettings(settings)
+        if (response.code === 200) {
+          uni.showToast({
+            title: '设置已保存',
+            icon: 'success'
+          })
+        } else {
+          uni.showToast({
+            title: '保存失败',
+            icon: 'none'
+          })
+        }
+      } catch (error) {
+        console.error('保存设置失败:', error)
+        uni.showToast({
+          title: '网络错误',
+          icon: 'none'
+        })
+      }
+    },
     goBack() {
       uni.navigateBack()
     },
@@ -516,17 +586,33 @@ export default {
       })
     },
     
-    clearCache() {
+    async clearCache() {
       uni.showModal({
         title: '清除缓存',
         content: '确定要清除所有缓存数据吗？',
-        success: (res) => {
+        success: async (res) => {
           if (res.confirm) {
-            this.cacheSize = '0MB'
-            uni.showToast({
-              title: '缓存已清除',
-              icon: 'success'
-            })
+            try {
+              const response = await systemApi.clearCache()
+              if (response.code === 200) {
+                this.cacheSize = '0MB'
+                uni.showToast({
+                  title: '缓存已清除',
+                  icon: 'success'
+                })
+              } else {
+                uni.showToast({
+                  title: '清除失败',
+                  icon: 'none'
+                })
+              }
+            } catch (error) {
+              console.error('清除缓存失败:', error)
+              uni.showToast({
+                title: '网络错误',
+                icon: 'none'
+              })
+            }
           }
         }
       })
@@ -540,18 +626,51 @@ export default {
     },
     
     // 其他设置
-    checkUpdate() {
+    async checkUpdate() {
       uni.showLoading({
         title: '检查更新中...'
       })
       
-      setTimeout(() => {
+      try {
+        const response = await systemApi.checkUpdate()
+        uni.hideLoading()
+        
+        if (response.code === 200) {
+          const updateInfo = response.data
+          if (updateInfo.hasUpdate) {
+            uni.showModal({
+              title: '发现新版本',
+              content: `新版本: ${updateInfo.version}\n更新内容: ${updateInfo.description}`,
+              confirmText: '立即更新',
+              success: (res) => {
+                if (res.confirm) {
+                  // 跳转到更新页面或下载链接
+                  uni.navigateTo({
+                    url: '/pages/system/update'
+                  })
+                }
+              }
+            })
+          } else {
+            uni.showToast({
+              title: '已是最新版本',
+              icon: 'success'
+            })
+          }
+        } else {
+          uni.showToast({
+            title: '检查更新失败',
+            icon: 'none'
+          })
+        }
+      } catch (error) {
+        console.error('检查更新失败:', error)
         uni.hideLoading()
         uni.showToast({
-          title: '已是最新版本',
-          icon: 'success'
+          title: '网络错误',
+          icon: 'none'
         })
-      }, 2000)
+      }
     },
     
     showAbout() {

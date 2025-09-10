@@ -24,12 +24,12 @@
         <text class="progress-title">学习进度</text>
         <view class="progress-stats">
           <view class="stat-item">
-            <text class="stat-number">75%</text>
+            <text class="stat-number">{{ studyData.progress?.totalProgress || 0 }}%</text>
             <text class="stat-label">总体完成度</text>
           </view>
           <view class="stat-divider"></view>
           <view class="stat-item">
-            <text class="stat-number">12</text>
+            <text class="stat-number">{{ studyData.progress?.completedCourses || 0 }}</text>
             <text class="stat-label">已学课程</text>
           </view>
         </view>
@@ -86,9 +86,56 @@
 </template>
 
 <script>
+import { studyApi } from '@/api/index.js'
+
 export default {
   name: 'StudyIndex',
+  data() {
+    return {
+      loading: false,
+      studyData: {
+        progress: {
+          totalProgress: 0,
+          completedCourses: 0
+        },
+        modules: []
+      }
+    }
+  },
+  
+  mounted() {
+    this.loadStudyData()
+  },
+  
   methods: {
+    async loadStudyData() {
+      try {
+        this.loading = true
+        const response = await studyApi.getStudyOverview()
+        if (response.code === 200 && response.data) {
+          // 确保数据结构完整性
+          this.studyData = {
+            progress: {
+              totalProgress: response.data.progress?.totalProgress || 0,
+              completedCourses: response.data.progress?.completedCourses || 0
+            },
+            modules: response.data.modules || []
+          }
+        } else {
+          // API调用失败时使用默认数据
+          console.warn('API返回数据格式不正确:', response)
+        }
+      } catch (error) {
+        console.error('加载学习数据失败:', error)
+        uni.showToast({
+          title: '加载失败',
+          icon: 'error'
+        })
+      } finally {
+        this.loading = false
+      }
+    },
+    
     // 跳转到考试介绍
     goToExamIntro() {
       uni.navigateTo({ url: '/pages/study/exam-intro' });

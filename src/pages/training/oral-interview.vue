@@ -235,8 +235,8 @@ export default {
       questions: []
     }
   },
-  async mounted() {
-    await this.loadTrainingData()
+  onLoad() {
+    this.loadTrainingData()
   },
   computed: {
     currentQuestionData() {
@@ -280,104 +280,50 @@ export default {
     },
     async loadTrainingData() {
       try {
+        this.loading = true
+        
         // 获取轮播图数据
-        const bannerResponse = await trainingApi.getTrainingBanners()
+        const bannerResponse = await trainingApi.getOralBanners()
         if (bannerResponse.code === 200) {
           this.banners = bannerResponse.data
-        } else {
-          // 使用默认数据
-          this.banners = [
-            {
-              icon: '🎯',
-              title: '专业口语面试训练',
-              subtitle: '提升航空英语口语表达能力',
-              tips: '真实场景模拟，专业评分反馈',
-              gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-            },
-            {
-              icon: '📈',
-              title: '智能评分系统',
-              subtitle: '多维度评估口语水平',
-              tips: '流利度、准确性、完整性全面分析',
-              gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
-            },
-            {
-              icon: '🏆',
-              title: '个性化训练方案',
-              subtitle: '针对性提升薄弱环节',
-              tips: '根据评估结果制定专属学习计划',
-              gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
-            }
-          ]
         }
 
         // 获取场景数据
         const scenarioResponse = await trainingApi.getOralScenarios()
         if (scenarioResponse.code === 200) {
           this.scenarios = scenarioResponse.data
-        } else {
-          // 使用默认数据
-          this.scenarios = [
-            {
-              id: 1,
-              name: '个人介绍',
-              description: '自我介绍和个人背景',
-              duration: '15分钟',
-              icon: '👤'
-            },
-            {
-              id: 2,
-              name: '工作经验',
-              description: '航空工作经验分享',
-              duration: '20分钟',
-              icon: '✈️'
-            },
-            {
-              id: 3,
-              name: '情景应对',
-              description: '紧急情况处理能力',
-              duration: '25分钟',
-              icon: '🚨'
-            }
-          ]
         }
       } catch (error) {
         console.error('获取训练数据失败:', error)
-        // 使用默认数据
-        this.banners = [
-          {
-            icon: '🎯',
-            title: '专业口语面试训练',
-            subtitle: '提升航空英语口语表达能力',
-            tips: '真实场景模拟，专业评分反馈',
-            gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-          }
-        ]
-        this.scenarios = [
-          {
-            id: 1,
-            name: '个人介绍',
-            description: '自我介绍和个人背景',
-            duration: '15分钟',
-            icon: '👤'
-          }
-        ]
+        uni.showToast({
+          title: '数据加载失败',
+          icon: 'none'
+        })
       } finally {
         this.loading = false
       }
     },
     async loadQuestions(scenarioId) {
       try {
+        this.loading = true
         const response = await trainingApi.getOralQuestions(scenarioId)
         if (response.code === 200) {
           this.questions = response.data
         } else {
           console.error('获取题目失败:', response.message)
-          this.questions = []
+          uni.showToast({
+            title: '题目加载失败',
+            icon: 'none'
+          })
         }
       } catch (error) {
         console.error('获取题目失败:', error)
-        this.questions = []
+        uni.showToast({
+          title: '题目加载失败',
+          icon: 'none'
+        })
+      } finally {
+        this.loading = false
       }
     },
     toggleRecording() {
@@ -425,24 +371,40 @@ export default {
         icon: 'none'
       })
     },
-    submitAnswer() {
+    async submitAnswer() {
       if (!this.hasRecording) return
       
-      // 模拟评分
-      const result = this.generateMockResult()
-      this.currentResult = result
-      this.questions[this.currentQuestion].result = result
-      
-      // 计算得分
-      const avgScore = (result.fluency + result.accuracy + result.completeness) / 3
-      this.score += Math.round(avgScore * 20)
-      
-      this.showResult = true
-      
-      uni.showToast({
-        title: '评分完成',
-        icon: 'success'
-      })
+      try {
+        // 提交录音进行评分
+        const response = await trainingApi.submitOralAnswer({
+          questionId: this.currentQuestionData.id,
+          scenarioId: this.selectedScenario.id,
+          recordingData: 'base64_audio_data', // 实际录音数据
+          duration: this.recordingTime
+        })
+        
+        if (response.code === 200) {
+          this.currentResult = response.data
+          this.questions[this.currentQuestion].result = response.data
+          
+          // 计算得分
+          const avgScore = (response.data.fluency + response.data.accuracy + response.data.completeness) / 3
+          this.score += Math.round(avgScore * 20)
+          
+          this.showResult = true
+          
+          uni.showToast({
+            title: '评分完成',
+            icon: 'success'
+          })
+        }
+      } catch (error) {
+        console.error('提交答案失败:', error)
+        uni.showToast({
+          title: '提交失败',
+          icon: 'none'
+        })
+      }
     },
     generateMockResult() {
       // 模拟评分结果
@@ -463,7 +425,7 @@ export default {
       ]
       return feedbacks[Math.floor(Math.random() * feedbacks.length)]
     },
-    nextQuestion() {
+    async nextQuestion() {
       if (this.currentQuestion < this.questions.length - 1) {
         this.currentQuestion++
         this.showResult = false
@@ -471,7 +433,22 @@ export default {
         this.recordingTime = 0
         this.currentResult = {}
       } else {
+        // 提交完整训练结果
+        await this.submitTrainingResult()
         this.showCompleteModal = true
+      }
+    },
+    async submitTrainingResult() {
+      try {
+        const results = this.questions.map(q => q.result).filter(r => r)
+        await trainingApi.submitOralTrainingResult({
+          scenarioId: this.selectedScenario.id,
+          totalScore: this.score,
+          results: results,
+          completedAt: new Date().toISOString()
+        })
+      } catch (error) {
+        console.error('提交训练结果失败:', error)
       }
     },
     restartTraining() {

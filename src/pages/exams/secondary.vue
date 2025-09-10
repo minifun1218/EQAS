@@ -2,8 +2,15 @@
   <cus-navbar title="复试英语考试">
   </cus-navbar>
   <view class="exam-container">
-    <!-- 顶部标题栏 -->
-    <view class="header">
+    <!-- 加载状态 -->
+    <view v-if="loading" class="loading-container">
+      <view class="loading-text">正在加载考试数据...</view>
+    </view>
+    
+    <!-- 考试内容 -->
+     <view v-if="!loading" class="exam-content">
+       <!-- 顶部标题栏 -->
+       <view class="header">
       <view class="exam-info">
         <text class="time">剩余时间: {{ formatTime(remainingTime) }}</text>
       </view>
@@ -186,6 +193,7 @@
         </view>
       </view>
     </view>
+    </view>
 
     <!-- 底部操作按钮 -->
     <view class="footer">
@@ -209,6 +217,7 @@
 
 <script>
 import CusNavbar from "../../components/cus-navbar.vue";
+import { examsApi } from '@/api/index.js'
 
 export default {
   components: {CusNavbar},
@@ -218,6 +227,8 @@ export default {
       totalSteps: 2,
       remainingTime: 3600, // 60分钟
       timer: null,
+      examData: {},
+      loading: false,
       
       // 录音状态
       isRecording: {},
@@ -233,87 +244,17 @@ export default {
       communicationQuality: '良好',
       responseTime: 0,
       
-      currentScenario: {
-        description: '飞机发动机故障紧急情况处理',
-        details: [
-          '航班号: CCA1234，机型: A320',
-          '当前位置: 距离首都机场50海里',
-          '高度: FL350，速度: 280节',
-          '报告: 左发动机故障，请求紧急降落'
-        ]
-      },
+      currentScenario: {},
+      scenarios: [],
       
-      communicationLogs: [
-        {
-          speaker: '系统',
-          content: '中级复试模拟通话开始，当前为紧急情况处理场景',
-          type: 'system',
-          time: '00:00'
-        },
-        {
-          speaker: 'CCA1234',
-          content: 'Beijing Control, CCA1234, Mayday Mayday Mayday, we have engine failure on left engine, requesting immediate landing at Beijing Capital.',
-          type: 'pilot',
-          time: '00:15'
-        }
-      ],
+      communicationLogs: [],
       
       // 口语面试
       currentQuestion: 0,
-      interviewQuestions: [
-        {
-          category: '专业知识',
-          text: '请详细描述空中交通管制员在处理紧急情况时的标准程序和注意事项。',
-          hints: [
-            '紧急情况的分类和优先级',
-            '与飞行员的沟通要点',
-            '协调其他部门的流程',
-            '安全保障措施'
-          ],
-          image: '/static/icons/emergency-procedure.png',
-          imageCaption: '紧急情况处理流程图'
-        },
-        {
-          category: '情景分析',
-          text: '假设你是值班管制员，同时面对三架飞机的不同需求：一架请求紧急降落，一架申请改变航路，一架报告天气绕飞。你如何安排优先级和处理顺序？',
-          hints: [
-            '安全优先原则',
-            '时间管理和效率',
-            '沟通协调技巧',
-            '应急预案的执行'
-          ]
-        },
-        {
-          category: '团队协作',
-          text: '请谈谈CRM（机组资源管理）在空管工作中的应用，以及如何与飞行员、其他管制员和相关部门进行有效协作。',
-          hints: [
-            'CRM的核心理念',
-            '沟通技巧和方法',
-            '团队决策过程',
-            '错误预防和纠正'
-          ]
-        },
-        {
-          category: '职业发展',
-          text: '作为一名空中交通管制员，你认为在未来航空业发展中，哪些新技术和新挑战需要我们特别关注和准备？',
-          hints: [
-            '新技术的影响',
-            '行业发展趋势',
-            '个人能力提升',
-            '持续学习的重要性'
-          ]
-        },
-        {
-          category: '压力管理',
-          text: '在高压力、高强度的管制工作中，你如何保持冷静和专注？请分享你的压力管理方法和经验。',
-          hints: [
-            '压力识别和评估',
-            '应对策略和技巧',
-            '心理调节方法',
-            '工作与生活平衡'
-          ]
-        }
-      ]
+      interviewQuestions: [],
+      
+      // 错误处理
+      loadError: false
     }
   },
   
@@ -344,6 +285,7 @@ export default {
   },
   
   mounted() {
+    this.loadExamData()
     this.startTimer()
     this.initializeEmergencyScenario()
   },
@@ -355,6 +297,67 @@ export default {
   },
   
   methods: {
+    async loadExamData() {
+      try {
+        this.loading = true
+        this.loadError = false
+        const response = await examsApi.getSecondaryExamData()
+        if (response.code === 200) {
+          this.examData = response.data.examData || response.data
+          const data = this.examData
+          
+          // 模拟通话数据
+          if (data.simulatedCall) {
+            this.scenarios = data.simulatedCall.scenarios || []
+            this.currentScenario = this.scenarios[0] || {}
+            this.totalRounds = data.simulatedCall.totalRounds || 25
+            this.communicationLogs = data.simulatedCall.initialLogs || [{
+              speaker: '系统',
+              content: '复试模拟通话即将开始，请准备...',
+              type: 'system'
+            }]
+          }
+          
+          // 口语面试数据
+          if (data.oralInterview) {
+            this.interviewQuestions = data.oralInterview.questions || []
+          }
+        } else {
+          throw new Error(response.message || '获取考试数据失败')
+        }
+      } catch (error) {
+        console.error('加载考试数据失败:', error)
+        this.loadError = true
+        uni.showToast({
+          title: '加载失败，请重试',
+          icon: 'error'
+        })
+        // 设置默认数据以防止页面崩溃
+        this.setDefaultExamData()
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    setDefaultExamData() {
+      this.scenarios = [{
+        title: '默认通话场景',
+        description: '场景描述',
+        details: ['场景详情']
+      }]
+      this.currentScenario = this.scenarios[0]
+      this.interviewQuestions = [{
+        text: '请介绍一下您的航空专业背景',
+        category: '专业背景',
+        hints: ['教育经历', '工作经验', '专业技能']
+      }]
+      this.communicationLogs = [{
+        speaker: '系统',
+        content: '复试模拟通话即将开始，请准备...',
+        type: 'system'
+      }]
+      this.totalRounds = 25
+    },
     startTimer() {
       this.timer = setInterval(() => {
         if (this.remainingTime > 0) {
@@ -927,5 +930,18 @@ export default {
   0% { transform: scale(1); }
   50% { transform: scale(1.05); }
   100% { transform: scale(1); }
+}
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60vh;
+  flex-direction: column;
+}
+
+.loading-text {
+  font-size: 16px;
+  color: #666;
+  margin-top: 20px;
 }
 </style>

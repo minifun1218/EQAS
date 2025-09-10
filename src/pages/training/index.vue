@@ -23,12 +23,12 @@
         <text class="progress-title">训练进度</text>
         <view class="progress-stats">
           <view class="stat-item">
-            <text class="stat-number">85%</text>
+            <text class="stat-number">{{progressData.overallProgress}}%</text>
             <text class="stat-label">总体完成度</text>
           </view>
           <view class="stat-divider"></view>
           <view class="stat-item">
-            <text class="stat-number">6</text>
+            <text class="stat-number">{{progressData.completedTrainings}}</text>
             <text class="stat-label">已完成训练</text>
           </view>
         </view>
@@ -116,16 +116,74 @@
 
 <script>
 import CusNavbar from "../../components/cus-navbar.vue";
+import { trainingApi } from '@/api/index.js'
 
 export default {
   name: 'TrainingIndex',
   components: {CusNavbar},
   data() {
     return {
-
+      progressData: {
+        overallProgress: 0,
+        completedTrainings: 0,
+        totalTrainings: 0
+      },
+      trainingModules: [],
+      loading: false
     }
   },
+  
+  onLoad() {
+    this.loadTrainingData()
+  },
   methods: {
+    async loadTrainingData() {
+      this.loading = true
+      try {
+        // 加载训练列表数据
+        const trainingResponse = await trainingApi.getTrainingList()
+        if (trainingResponse.code === 200) {
+          const trainingData = trainingResponse.data || []
+          
+          // 计算训练进度数据
+          const completedTrainings = trainingData.filter(item => item.status === 'completed').length
+          const totalTrainings = trainingData.length || 1
+          const overallProgress = Math.round((completedTrainings / totalTrainings) * 100)
+          
+          this.progressData = {
+            overallProgress: overallProgress,
+            completedTrainings: completedTrainings,
+            totalTrainings: totalTrainings
+          }
+          
+          // 设置训练模块数据
+          this.trainingModules = trainingData
+        } else {
+          // 设置默认数据
+          this.progressData = {
+            overallProgress: 0,
+            completedTrainings: 0,
+            totalTrainings: 0
+          }
+          this.trainingModules = []
+        }
+      } catch (error) {
+        console.error('加载训练数据失败:', error)
+        // 设置默认数据
+        this.progressData = {
+          overallProgress: 0,
+          completedTrainings: 0,
+          totalTrainings: 0
+        }
+        this.trainingModules = []
+        uni.showToast({
+          title: '加载数据失败',
+          icon: 'none'
+        })
+      } finally {
+        this.loading = false
+      }
+    },
     // 跳转到听力理解训练
     goToListeningComprehension() {
       uni.navigateTo({
